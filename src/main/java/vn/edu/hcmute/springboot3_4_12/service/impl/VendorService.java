@@ -12,6 +12,8 @@ import vn.edu.hcmute.springboot3_4_12.repository.VendorRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
 
@@ -22,6 +24,9 @@ public class VendorService {
     private final VendorMapper vendorMapper;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<VendorResponseDTO> findAll() {
         return vendorRepository.findAllWithUser().stream()
@@ -74,18 +79,23 @@ public class VendorService {
     public void delete(Long id) {
         Vendor vendor = vendorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vendor not found"));
-        
+
         User user = vendor.getUser();
-        
+
+        // Xóa tất cả VendorRevenue của vendor trước (để tránh foreign key constraint)
+        entityManager.createQuery("DELETE FROM VendorRevenue vr WHERE vr.vendor.id = :vendorId")
+                .setParameter("vendorId", id)
+                .executeUpdate();
+
         // Xóa tất cả sản phẩm của vendor trước (để tránh foreign key constraint)
         var products = productRepository.findByVendor_Id(id);
         if (products != null && !products.isEmpty()) {
             productRepository.deleteAll(products);
         }
-        
+
         // Xóa vendor
         vendorRepository.deleteById(id);
-        
+
         // Nếu user không phải ADMIN, đổi role về CUSTOMER
         if (user != null && !"ADMIN".equals(user.getRole())) {
             user.setRole("CUSTOMER");

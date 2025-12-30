@@ -3,13 +3,16 @@ import vn.edu.hcmute.springboot3_4_12.service.IProductService;
 import vn.edu.hcmute.springboot3_4_12.service.ICategoryService;
 import vn.edu.hcmute.springboot3_4_12.service.impl.VendorService;
 import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
+import vn.edu.hcmute.springboot3_4_12.dto.ProductRequestDTO;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -37,7 +40,7 @@ public class ProductPageController {
     }
 
     // Trang chỉnh sửa sản phẩm
-    @GetMapping("/edit/{id}")
+    @GetMapping("/{id}/edit")
     @Transactional
     public String editPage(@PathVariable Long id, Model model) {
         try {
@@ -53,7 +56,7 @@ public class ProductPageController {
                 var categories = productEntity.get().getCategories();
                 var categoryIds = categories.stream()
                     .map(cat -> cat.getId() != null ? cat.getId() : 0L)
-                    .filter(id -> id > 0)
+                    .filter(catId -> catId > 0)
                     .collect(java.util.stream.Collectors.toList());
                 model.addAttribute("selectedCategoryIds", categoryIds);
             }
@@ -63,6 +66,125 @@ public class ProductPageController {
             e.printStackTrace();
             model.addAttribute("error", "Không tìm thấy sản phẩm: " + e.getMessage());
             return "redirect:/admin/products";
+        }
+    }
+
+    @PostMapping("/create")
+    public String createProduct(HttpServletRequest request, Model model) {
+        try {
+            String nameVi = request.getParameter("nameVi");
+            String nameEn = request.getParameter("nameEn");
+            String descriptionVi = request.getParameter("descriptionVi");
+            String descriptionEn = request.getParameter("descriptionEn");
+            String priceStr = request.getParameter("price");
+            String stockStr = request.getParameter("stock");
+            String vendorIdStr = request.getParameter("vendorId");
+            String[] categoryIds = request.getParameterValues("categoryIds");
+
+            // Validation cơ bản
+            if (nameVi == null || nameVi.trim().isEmpty()) {
+                model.addAttribute("error", "Tên sản phẩm tiếng Việt không được để trống");
+                model.addAttribute("categories", categoryService.getAll());
+                model.addAttribute("vendors", vendorService.findAll());
+                return "admin/product/form";
+            }
+
+            ProductRequestDTO dto = new ProductRequestDTO();
+            dto.setNameVi(nameVi.trim());
+            dto.setNameEn(nameEn != null ? nameEn.trim() : null);
+            dto.setDescriptionVi(descriptionVi != null ? descriptionVi.trim() : null);
+            dto.setDescriptionEn(descriptionEn != null ? descriptionEn.trim() : null);
+            dto.setPrice(priceStr != null && !priceStr.isEmpty() ? Double.parseDouble(priceStr) : 0.0);
+            dto.setStock(stockStr != null && !stockStr.isEmpty() ? Integer.parseInt(stockStr) : 0);
+            dto.setVendorId(vendorIdStr != null && !vendorIdStr.isEmpty() ? Long.parseLong(vendorIdStr) : null);
+
+            // Xử lý categories
+            if (categoryIds != null && categoryIds.length > 0) {
+                dto.setCategoryIds(java.util.Arrays.stream(categoryIds)
+                    .map(Long::parseLong)
+                    .collect(java.util.stream.Collectors.toList()));
+            }
+
+            // Tạo sản phẩm (không có file upload trong form đơn giản này)
+            productService.create(dto, null);
+
+            return "redirect:/admin/products?success=Sản phẩm đã được tạo thành công";
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("error", "Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage());
+            model.addAttribute("categories", categoryService.getAll());
+            model.addAttribute("vendors", vendorService.findAll());
+            return "admin/product/form";
+        }
+    }
+
+    @PostMapping("/save")
+    public String saveProduct(HttpServletRequest request, Model model) {
+        try {
+            String idStr = request.getParameter("id");
+            String nameVi = request.getParameter("nameVi");
+            String nameEn = request.getParameter("nameEn");
+            String descriptionVi = request.getParameter("descriptionVi");
+            String descriptionEn = request.getParameter("descriptionEn");
+            String priceStr = request.getParameter("price");
+            String stockStr = request.getParameter("stock");
+            String vendorIdStr = request.getParameter("vendorId");
+            String[] categoryIds = request.getParameterValues("categoryIds");
+
+            // Validation cơ bản
+            if (nameVi == null || nameVi.trim().isEmpty()) {
+                model.addAttribute("error", "Tên sản phẩm tiếng Việt không được để trống");
+                model.addAttribute("categories", categoryService.getAll());
+                model.addAttribute("vendors", vendorService.findAll());
+                return "admin/product/form";
+            }
+
+            if (idStr == null || idStr.trim().isEmpty()) {
+                model.addAttribute("error", "ID sản phẩm không được để trống");
+                return "redirect:/admin/products";
+            }
+
+            ProductRequestDTO dto = new ProductRequestDTO();
+            dto.setNameVi(nameVi.trim());
+            dto.setNameEn(nameEn != null ? nameEn.trim() : null);
+            dto.setDescriptionVi(descriptionVi != null ? descriptionVi.trim() : null);
+            dto.setDescriptionEn(descriptionEn != null ? descriptionEn.trim() : null);
+            dto.setPrice(priceStr != null && !priceStr.isEmpty() ? Double.parseDouble(priceStr) : 0.0);
+            dto.setStock(stockStr != null && !stockStr.isEmpty() ? Integer.parseInt(stockStr) : 0);
+            dto.setVendorId(vendorIdStr != null && !vendorIdStr.isEmpty() ? Long.parseLong(vendorIdStr) : null);
+
+            // Xử lý categories
+            if (categoryIds != null && categoryIds.length > 0) {
+                dto.setCategoryIds(java.util.Arrays.stream(categoryIds)
+                    .map(Long::parseLong)
+                    .collect(java.util.stream.Collectors.toList()));
+            }
+
+            productService.update(Long.parseLong(idStr), dto);
+
+            return "redirect:/admin/products/" + idStr + "/edit?success=Sản phẩm đã được cập nhật thành công";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/admin/products?error=Có lỗi xảy ra khi cập nhật sản phẩm: " + e.getMessage();
+        }
+    }
+
+    // Xóa sản phẩm
+    @PostMapping("/delete")
+    public String deleteProduct(HttpServletRequest request) {
+        try {
+            String idStr = request.getParameter("id");
+            if (idStr == null || idStr.trim().isEmpty()) {
+                return "redirect:/admin/products?error=ID sản phẩm không hợp lệ";
+            }
+
+            Long id = Long.parseLong(idStr);
+            productService.delete(id);
+
+            return "redirect:/admin/products?success=Sản phẩm đã được xóa thành công";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/admin/products?error=Có lỗi xảy ra khi xóa sản phẩm: " + e.getMessage();
         }
     }
 }

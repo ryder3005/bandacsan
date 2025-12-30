@@ -28,7 +28,10 @@
         </div>
     </c:if>
     
-    <form method="post" enctype="multipart/form-data" id="productForm">
+    <form method="post" action="<c:url value='${not empty product ? "/admin/products/save" : "/admin/products/create"}' />" id="productForm">
+        <c:if test="${not empty product}">
+            <input type="hidden" name="id" value="${product.id}" />
+        </c:if>
         <input type="hidden" id="productId" value="${product.id}" />
         
         <div class="row">
@@ -127,77 +130,5 @@
 
 <jsp:include page="/WEB-INF/common/footer.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.getElementById('productForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const productId = document.getElementById('productId').value;
-        const isEdit = productId && productId !== '';
-        
-        // Tạo JSON object từ form
-        const productData = {
-            nameVi: document.getElementById('nameVi').value,
-            nameEn: document.getElementById('nameEn').value,
-            descriptionVi: document.getElementById('descriptionVi').value,
-            descriptionEn: document.getElementById('descriptionEn').value,
-            price: parseFloat(document.getElementById('price').value),
-            stock: parseInt(document.getElementById('stock').value),
-            vendorId: parseInt(document.getElementById('vendorId').value),
-            categoryIds: Array.from(document.getElementById('categoryIds').selectedOptions).map(opt => parseInt(opt.value))
-        };
-        
-        if (isEdit) {
-            // Update: Gửi PUT request với JSON
-            fetch('<c:url value="/admin/api/products"/>' + '/' + productId, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(productData)
-            })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = '<c:url value="/admin/products"/>';
-                } else {
-                    response.text().then(text => {
-                        alert('Có lỗi xảy ra khi cập nhật sản phẩm: ' + text);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi cập nhật sản phẩm');
-            });
-        } else {
-            // Create: Gửi POST request với FormData (có thể có file)
-            const formData = new FormData();
-            formData.append('product', JSON.stringify(productData));
-            
-            // Thêm files
-            const files = document.getElementById('files').files;
-            for (let i = 0; i < files.length; i++) {
-                formData.append('files', files[i]);
-            }
-            
-            fetch('<c:url value="/admin/api/products"/>', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    window.location.href = '<c:url value="/admin/products"/>';
-                } else {
-                    response.text().then(text => {
-                        alert('Có lỗi xảy ra khi tạo sản phẩm: ' + text);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi tạo sản phẩm');
-            });
-        }
-    });
-</script>
 </body>
 </html>

@@ -110,10 +110,12 @@
                                                 </c:choose>
                                             </td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-outline-warning">
+                                                <a href="<c:url value='/vendor/products/edit/${p.id}'/>"
+                                                   class="btn btn-sm btn-outline-warning">
                                                     <i class="bi bi-pencil"></i> Sửa
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        onclick="confirmDelete(${p.id}, '${p.nameVi}')">
                                                     <i class="bi bi-trash"></i> Xóa
                                                 </button>
                                             </td>
@@ -131,6 +133,21 @@
 </div>
 
 <jsp:include page="/WEB-INF/common/footer.jsp" />
+
+<!-- Form xóa ẩn -->
+<form id="deleteForm" method="post" action="">
+    <input type="hidden" name="_method" value="delete" />
+</form>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmDelete(id, name) {
+        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm "' + name + '"?\n\nLưu ý: Thao tác này không thể hoàn tác!')) {
+            const form = document.getElementById('deleteForm');
+            form.action = '<c:url value="/vendor/products/delete/"/>' + id;
+            form.submit();
+        }
+    }
+</script>
 </body>
 </html>

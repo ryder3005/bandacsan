@@ -1,15 +1,20 @@
 package vn.edu.hcmute.springboot3_4_12.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "blogs")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Blog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,12 +24,24 @@ public class Blog {
     private String titleEn;
 
     @Column(columnDefinition = "TEXT")
+    private String summaryVi;
+
+    @Column(columnDefinition = "TEXT")
+    private String summaryEn;
+
+    @Column(columnDefinition = "TEXT")
     private String contentVi;
 
     @Column(columnDefinition = "TEXT")
     private String contentEn;
+
+    private String slug;
+    private String imageUrl;
+
     @ToString.Exclude
-    @ManyToOne private User author;
+    @ManyToOne
+    private User author;
+
     @ToString.Exclude
     @ManyToMany
     @JoinTable(
@@ -33,6 +50,9 @@ public class Blog {
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
     private List<Product> products = new ArrayList<>();
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }
 

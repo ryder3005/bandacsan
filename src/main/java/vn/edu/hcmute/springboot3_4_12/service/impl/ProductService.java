@@ -21,7 +21,6 @@ import vn.edu.hcmute.springboot3_4_12.service.IStorageService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -113,10 +112,15 @@ public class ProductService implements IProductService {
 
         Vendor vendor = vendorRepository.findById(dto.getVendorId())
                 .orElseThrow(() -> new RuntimeException("Vendor không tồn tại"));
-        List<Category> categories = categoryRepository.findAllById(dto.getCategoryIds());
+
+        // Xử lý categories - có thể null hoặc empty
+        List<Category> categories = new ArrayList<>();
+        if (dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty()) {
+            categories = categoryRepository.findAllById(dto.getCategoryIds());
+        }
 
         existingProduct.setVendor(vendor);
-        existingProduct.setCategories( categories);
+        existingProduct.setCategories(categories);
 
         Product updatedProduct = productRepository.save(existingProduct);
         return convertToResponseDTO(updatedProduct);

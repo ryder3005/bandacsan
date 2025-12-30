@@ -5,7 +5,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.hcmute.springboot3_4_12.dto.ProductRequestDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.ProductResponseDTO;
-import vn.edu.hcmute.springboot3_4_12.entity.*;
 import vn.edu.hcmute.springboot3_4_12.service.IProductService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -58,10 +57,15 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody ProductRequestDTO dto
+            @RequestBody ProductRequestDTO dto
     ) {
-        // Cập nhật kiểu trả về để tránh vòng lặp khi render JSON kết quả update
-        return ResponseEntity.ok(productService.update(id, dto));
+        // Validation được xử lý trong service layer
+        try {
+            ProductResponseDTO result = productService.update(id, dto);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     /* ================= DELETE ================= */

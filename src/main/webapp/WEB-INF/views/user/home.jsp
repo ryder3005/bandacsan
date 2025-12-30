@@ -9,64 +9,562 @@
     <title>Trang chủ - Đặc sản quê hương</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        .hero-carousel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0 0 50px 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .hero-slide {
+            height: 70vh;
+            min-height: 500px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            animation: textGlow 3s ease-in-out infinite alternate;
+        }
+
+        .hero-subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        @keyframes textGlow {
+            from { text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+            to { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px rgba(255,255,255,0.6); }
+        }
+
+        .hero-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: none;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:nth-child(1) .feature-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .feature-card:nth-child(2) .feature-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .feature-card:nth-child(3) .feature-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+
+        .category-card {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: scale(1.05);
+        }
+
+        .category-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover .category-overlay {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .category-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .product-showcase {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 30px;
+            padding: 60px 40px;
+            margin: 60px 0;
+        }
+
+        .showcase-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .testimonial-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .testimonial-quote {
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .testimonial-author {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stats-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 60px 0;
+            margin: 60px 0;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+            border-radius: 30px;
+            margin: 60px 0;
+        }
+
+        .cta-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .cta-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .cta-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            border: none;
+            padding: 18px 50px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .carousel-indicators {
+            bottom: 20px;
+        }
+
+        .carousel-indicators button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .showcase-title {
+                font-size: 2rem;
+            }
+
+            .cta-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
 <jsp:include page="/WEB-INF/common/header.jsp" />
-<div class="container mt-4">
-<!-- Hero Section -->
-<div class="hero-section mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 60px 40px; color: white; text-align: center;">
-    <div class="container">
-        <h1 class="display-4 fw-bold mb-3">
-            <i class="bi bi-shop"></i> Đặc sản quê hương
-        </h1>
-        <p class="lead mb-4">Khám phá những món đặc sản ngon nhất từ khắp mọi miền đất nước</p>
-        <div class="d-flex justify-content-center gap-3 flex-wrap">
-            <a class="btn btn-light btn-lg px-4" href="<c:url value='/user/products'/>" role="button">
-                <i class="bi bi-box-seam"></i> Xem sản phẩm
-            </a>
-            <a class="btn btn-outline-light btn-lg px-4" href="<c:url value='/user/categories'/>" role="button">
-                <i class="bi bi-tags"></i> Xem danh mục
-            </a>
+
+<!-- Hero Carousel -->
+<section class="hero-carousel">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
         </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');">
+                    <div class="hero-overlay"></div>
+                    <div class="container">
+                        <div class="hero-content animate__animated animate__fadeInUp">
+                            <h1 class="hero-title">Đặc Sản Việt Nam</h1>
+                            <p class="hero-subtitle">Khám phá hương vị truyền thống từ 3 miền đất nước</p>
+                            <a href="<c:url value='/user/products'/>" class="btn hero-btn">
+                                <i class="fas fa-shopping-cart me-2"></i>Khám phá ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');">
+                    <div class="hero-overlay"></div>
+                    <div class="container">
+                        <div class="hero-content animate__animated animate__fadeInUp">
+                            <h1 class="hero-title">Tươi Ngon Mỗi Ngày</h1>
+                            <p class="hero-subtitle">Giao hàng tận nơi với chất lượng được đảm bảo</p>
+                            <a href="<c:url value='/user/categories'/>" class="btn hero-btn">
+                                <i class="fas fa-tags me-2"></i>Xem danh mục
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1551218808-94e220e084d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80');">
+                    <div class="hero-overlay"></div>
+                    <div class="container">
+                        <div class="hero-content animate__animated animate__fadeInUp">
+                            <h1 class="hero-title">Truyền Thống & Hiện Đại</h1>
+                            <p class="hero-subtitle">Kết hợp tinh hoa ẩm thực Việt với trải nghiệm mua sắm online</p>
+                            <a href="<c:url value='/user/blogs'/>" class="btn hero-btn">
+                                <i class="fas fa-blog me-2"></i>Đọc tin tức
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
     </div>
-</div>
+</section>
+
+<div class="container">
 
 <!-- Features Section -->
-<div class="row mb-5">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center p-4">
-                <div class="feature-icon mb-3" style="font-size: 3rem; color: #667eea;">
-                    <i class="bi bi-truck"></i>
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="showcase-title animate__animated animate__fadeInUp">Tại sao chọn chúng tôi?</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card animate__animated animate__fadeInUp">
+                    <div class="feature-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">Giao hàng siêu tốc</h5>
+                    <p class="card-text text-muted">Giao hàng tận nơi trong 24h, đảm bảo tươi ngon và an toàn</p>
                 </div>
-                <h5 class="card-title fw-bold">Giao hàng nhanh</h5>
-                <p class="card-text text-muted">Giao hàng tận nơi trong thời gian ngắn nhất, đảm bảo tươi ngon</p>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">Chất lượng 100%</h5>
+                    <p class="card-text text-muted">Sản phẩm được kiểm định nghiêm ngặt, đảm bảo an toàn vệ sinh</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card animate__animated animate__fadeInUp animate__delay-2s">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">Hỗ trợ tận tình</h5>
+                    <p class="card-text text-muted">Đội ngũ chăm sóc khách hàng chuyên nghiệp, hỗ trợ 24/7</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center p-4">
-                <div class="feature-icon mb-3" style="font-size: 3rem; color: #198754;">
-                    <i class="bi bi-shield-check"></i>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="showcase-title animate__animated animate__fadeInUp">Khám phá đặc sản</h2>
+                <p class="text-muted animate__animated animate__fadeInUp animate__delay-1s">Đặc sản từ 3 miền Bắc - Trung - Nam Việt Nam</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="category-card animate__animated animate__fadeInLeft" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');">
+                    <div class="category-overlay">
+                        <div>
+                            <h3 class="category-title">Miền Bắc</h3>
+                            <p class="category-desc">Phở Hà Nội, Bún Chả, Nem Phùng</p>
+                            <a href="<c:url value='/user/categories'/>" class="btn btn-light btn-lg mt-3">Khám phá</a>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title fw-bold">Chất lượng đảm bảo</h5>
-                <p class="card-text text-muted">Sản phẩm được chọn lọc kỹ lưỡng, đảm bảo chất lượng và an toàn</p>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="category-card animate__animated animate__fadeInUp" style="background-image: url('https://images.unsplash.com/photo-1586190848861-99aa4a171e90?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80');">
+                    <div class="category-overlay">
+                        <div>
+                            <h3 class="category-title">Miền Trung</h3>
+                            <p class="category-desc">Mì Quảng, Bánh Bèo, Cao Lầu</p>
+                            <a href="<c:url value='/user/categories'/>" class="btn btn-light btn-lg mt-3">Khám phá</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="category-card animate__animated animate__fadeInRight" style="background-image: url('https://images.unsplash.com/photo-1551218808-94e220e084d2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80');">
+                    <div class="category-overlay">
+                        <div>
+                            <h3 class="category-title">Miền Nam</h3>
+                            <p class="category-desc">Bánh Mì Sài Gòn, Hủ Tiếu, Bánh Tét</p>
+                            <a href="<c:url value='/user/categories'/>" class="btn btn-light btn-lg mt-3">Khám phá</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center p-4">
-                <div class="feature-icon mb-3" style="font-size: 3rem; color: #dc3545;">
-                    <i class="bi bi-heart-fill"></i>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="animate__animated animate__fadeInUp">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Sản phẩm đặc sắc</div>
                 </div>
-                <h5 class="card-title fw-bold">Đậm đà hương vị</h5>
-                <p class="card-text text-muted">Giữ nguyên hương vị truyền thống, đậm đà bản sắc quê hương</p>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="stat-number">1000+</div>
+                    <div class="stat-label">Khách hàng hài lòng</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="animate__animated animate__fadeInUp animate__delay-2s">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Nhà bán hàng</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="animate__animated animate__fadeInUp animate__delay-3s">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Hỗ trợ khách hàng</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="showcase-title animate__animated animate__fadeInUp">Khách hàng nói gì</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card animate__animated animate__fadeInLeft">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-quote-left text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <p class="testimonial-quote">"Sản phẩm rất tươi ngon, giao hàng nhanh chóng. Đặc biệt là phở Hà Nội mang đúng hương vị truyền thống!"</p>
+                    <div class="text-center">
+                        <div class="testimonial-author">- Nguyễn Văn A, Hà Nội</div>
+                        <div class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card animate__animated animate__fadeInUp">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-quote-left text-success" style="font-size: 2rem;"></i>
+                    </div>
+                    <p class="testimonial-quote">"Website dễ sử dụng, đa dạng sản phẩm. Mình rất thích phần bánh mì Sài Gòn và hủ tiếu Nam Vang."</p>
+                    <div class="text-center">
+                        <div class="testimonial-author">- Trần Thị B, TP.HCM</div>
+                        <div class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="testimonial-card animate__animated animate__fadeInRight">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-quote-left text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                    <p class="testimonial-quote">"Dịch vụ chăm sóc khách hàng tuyệt vời. Mọi thắc mắc đều được giải đáp nhanh chóng và tận tình."</p>
+                    <div class="text-center">
+                        <div class="testimonial-author">- Lê Văn C, Đà Nẵng</div>
+                        <div class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title animate__animated animate__bounceIn">Sẵn sàng trải nghiệm?</h2>
+            <p class="cta-subtitle animate__animated animate__fadeInUp animate__delay-1s">
+                Đặt hàng ngay hôm nay và nhận ưu đãi đặc biệt cho khách hàng mới!
+            </p>
+            <a href="<c:url value='/user/products'/>" class="cta-btn animate__animated animate__fadeInUp animate__delay-2s">
+                <i class="fas fa-shopping-bag me-2"></i>Bắt đầu mua sắm
+            </a>
+        </div>
+    </div>
+</section>
 
 <!-- Categories Section -->
 <c:if test="${not empty categories}">

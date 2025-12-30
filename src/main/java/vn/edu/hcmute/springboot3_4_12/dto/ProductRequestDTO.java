@@ -3,12 +3,10 @@ package vn.edu.hcmute.springboot3_4_12.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -39,7 +37,6 @@ public class ProductRequestDTO {
     @NotNull(message = "Vendor không được để trống")
     private Long vendorId;
 
-    @NotEmpty(message = "Danh mục không được rỗng")
     private List<Long> categoryIds;
     private List<String> imageUrls;
     // getter & setter

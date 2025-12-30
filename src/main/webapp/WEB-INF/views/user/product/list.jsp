@@ -146,9 +146,19 @@
                                                             </span>
                                                         </c:if>
                                                     </div>
-                                                    <a href="#" class="btn btn-primary w-100">
-                                                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
-                                                    </a>
+                                                    <div class="d-flex gap-2">
+                                                        <form method="post" action="<c:url value='/user/cart/add'/>" class="flex-fill">
+                                                            <input type="hidden" name="productId" value="${product.id}">
+                                                            <input type="hidden" name="quantity" value="1">
+                                                            <button type="submit" class="btn btn-primary w-100">
+                                                                <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                                            </button>
+                                                        </form>
+                                                        <a href="<c:url value='/user/chat/start/${product.vendorId}'/>"
+                                                           class="btn btn-outline-success" style="width: 50px;">
+                                                            <i class="fas fa-comments"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
