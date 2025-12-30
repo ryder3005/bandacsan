@@ -42,30 +42,38 @@ public class LoginController {
     public String performLogin(@RequestParam String username,
                                @RequestParam String password,
                                HttpServletRequest request) {
-        Optional<User> opt = userRepository.findUserByUsername(username);
-        if (opt.isEmpty()) {
-            request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng");
+        try {
+            Optional<User> opt = userRepository.findUserByUsername(username);
+            if (opt.isEmpty()) {
+                request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng");
+                return "login";
+            }
+
+            User user = opt.get();
+            
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng");
+                return "login";
+            }
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("user", user);
+
+            // Redirect theo role
+            String role = user.getRole();
+            
+            if ("ADMIN".equals(role)) {
+                return "redirect:/admin/home";
+            } else if ("VENDOR".equals(role)) {
+                return "redirect:/vendor/dashboard";
+            } else {
+                // USER/CUSTOMER
+                return "redirect:/user/home";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("message", "Có lỗi xảy ra khi đăng nhập: " + e.getMessage());
             return "login";
-        }
-
-        User user = opt.get();
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            request.setAttribute("message", "Tên đăng nhập hoặc mật khẩu không đúng");
-            return "login";
-        }
-
-        HttpSession session = request.getSession(true);
-        session.setAttribute("user", user);
-
-        // Redirect theo role
-        String role = user.getRole();
-        if ("ADMIN".equals(role)) {
-            return "redirect:/admin/home";
-        } else if ("VENDOR".equals(role)) {
-            return "redirect:/vendor/dashboard";
-        } else {
-            // USER/CUSTOMER
-            return "redirect:/user/home";
         }
     }
 

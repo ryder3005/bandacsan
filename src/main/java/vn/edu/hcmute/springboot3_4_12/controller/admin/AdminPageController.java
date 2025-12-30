@@ -11,10 +11,19 @@ public class AdminPageController {
 
     @GetMapping({"/admin", "/admin/home"})
     public String dashboard(Model model) {
-        // Provide empty collections to avoid null checks in JSP
-        model.addAttribute("users", Collections.emptyList());
-        model.addAttribute("categories", Collections.emptyList());
-        model.addAttribute("videos", Collections.emptyList());
-        return "admin/dashboard";
+        try {
+            // Provide empty collections to avoid null checks in JSP
+            model.addAttribute("users", Collections.emptyList());
+            model.addAttribute("categories", Collections.emptyList());
+            model.addAttribute("videos", Collections.emptyList());
+            return "admin/dashboard";
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Nếu có lỗi, vẫn trả về view với dữ liệu rỗng
+            model.addAttribute("users", Collections.emptyList());
+            model.addAttribute("categories", Collections.emptyList());
+            model.addAttribute("videos", Collections.emptyList());
+            return "admin/dashboard";
+        }
     }
 }

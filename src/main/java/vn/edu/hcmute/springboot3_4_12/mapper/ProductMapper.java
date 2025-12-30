@@ -19,9 +19,12 @@ public interface ProductMapper {
     ProductResponseDTO toResponseDTO(Product product);
 
     default List<String> mapCategoriesToNames(List<Category> categories) {
-        if (categories == null) return null;
+        if (categories == null || categories.isEmpty()) {
+            return new java.util.ArrayList<>(); // Trả về empty list thay vì null
+        }
         return categories.stream()
-                .map(Category::getNameVi)
+                .map(cat -> cat != null && cat.getNameVi() != null ? cat.getNameVi() : "")
+                .filter(name -> !name.isEmpty())
                 .collect(Collectors.toList());
     }
 

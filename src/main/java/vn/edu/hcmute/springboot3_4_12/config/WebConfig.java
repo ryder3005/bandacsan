@@ -14,7 +14,16 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(authInterceptor)
-//                .addPathPatterns("/api/**", "/admin/**");
+        registry.addInterceptor(authInterceptor)
+                .addPathPatterns("/**") // Áp dụng cho tất cả routes
+                .excludePathPatterns(
+                        "/login",              // Trang đăng nhập
+                        "/register",           // Trang đăng ký
+                        "/perform_login",      // Xử lý đăng nhập
+                        "/logout",             // Đăng xuất
+                        "/error",              // Trang lỗi
+                        "/resources/**",       // Static resources (CSS, JS, images)
+                        "/api/auth/**"         // API đăng nhập/đăng ký (nếu có)
+                );
     }
 }

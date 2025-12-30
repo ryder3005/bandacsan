@@ -16,14 +16,13 @@ public class CustomSiteMeshFilter extends ConfigurableSiteMeshFilter{
 		builder.addExcludedPath("/resources/*");
 		builder.addExcludedPath("/perform_login");
 		
-		// Decorator cho admin
-		builder.addDecoratorPath("/admin/*", "/WEB-INF/decorators/admin-decorator.jsp");
-		
+		// Decorator cho admin (use decorator filenames — SiteMesh uses WEB-INF/decorators as base)
+		builder.addDecoratorPath("/admin/*", "/admin-decorator.jsp");
+
 		// Decorator cho vendor
-		builder.addDecoratorPath("/vendor/*", "/WEB-INF/decorators/vendor-decorator.jsp");
-		
-		// Decorator mặc định cho user (bao gồm /user/* và các trang khác)
-		builder.addDecoratorPath("/user/*", "/WEB-INF/decorators/user-decorator.jsp");
-		builder.addDecoratorPath("/*", "/WEB-INF/decorators/user-decorator.jsp");
+		builder.addDecoratorPath("/vendor/*", "/vendor-decorator.jsp");
+
+		// Decorator cho user
+		builder.addDecoratorPath("/user/*", "/user-decorator.jsp");
 	}
 }

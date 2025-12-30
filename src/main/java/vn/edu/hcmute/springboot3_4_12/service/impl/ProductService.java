@@ -58,9 +58,11 @@ public class ProductService implements IProductService {
     public ProductResponseDTO findById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm id = " + id));
-        ProductResponseDTO productResponseDTO=convertToResponseDTO(product);
-        if (!product.getCategories().isEmpty()){
-            productResponseDTO.setCategories(product.getCategories().stream().map(cate-> cate.getNameVi()).toList());
+        ProductResponseDTO productResponseDTO = convertToResponseDTO(product);
+        // convertToResponseDTO đã xử lý categories, không cần xử lý lại
+        // Đảm bảo categories không null
+        if (productResponseDTO.getCategories() == null) {
+            productResponseDTO.setCategories(new ArrayList<>());
         }
         return productResponseDTO;
     }
@@ -136,12 +138,24 @@ public class ProductService implements IProductService {
     @Override
     public ProductResponseDTO convertToResponseDTO(Product product) {
         ProductResponseDTO dto = productMapper.toResponseDTO(product);
-        if (product.getImages() != null) {
+        
+        // Đảm bảo imageUrls luôn là một List, không phải null
+        if (product.getImages() != null && !product.getImages().isEmpty()) {
             List<String> urls = product.getImages().stream()
                     .map(Image::getUrl)
-                    .toList();
+                    .filter(url -> url != null && !url.isEmpty())
+                    .collect(Collectors.toList());
             dto.setImageUrls(urls);
+        } else {
+            // Đảm bảo luôn có một List rỗng thay vì null
+            dto.setImageUrls(new ArrayList<>());
         }
+        
+        // Đảm bảo categories luôn là một List, không phải null
+        if (dto.getCategories() == null) {
+            dto.setCategories(new ArrayList<>());
+        }
+        
         return dto;
     }
 }

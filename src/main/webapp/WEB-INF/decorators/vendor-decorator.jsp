@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhà bán hàng - <sitemesh:write property='title'/></title>
+    <title>Nhà bán hàng - Vendor Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <sitemesh:write property='head'/>
@@ -147,7 +147,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-0" style="color: #16a085;">
-                                <sitemesh:write property='title'/>
+                                Vendor Dashboard
                             </h5>
                         </div>
                         <div class="user-info">

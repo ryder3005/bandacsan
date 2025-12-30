@@ -32,13 +32,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Tắt cho API
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/auth/**").permitAll() // Cho phép Login/Register
-//                        .requestMatchers("/admin/**").hasRole("ADMIN") // Chỉ Admin mới vào được
-//                        .anyRequest().authenticated() // Còn lại phải đăng nhập
-//                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Dùng cho JWT
-                .httpBasic(Customizer.withDefaults()); // Hoặc dùng FormLogin
+                // Cho phép tất cả request - AuthInterceptor sẽ xử lý authentication
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                )
+                // Sử dụng session-based authentication (không phải STATELESS)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Cho phép tạo session
+                )
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }

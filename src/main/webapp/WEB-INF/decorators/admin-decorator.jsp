@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản trị - <sitemesh:write property='title'/></title>
+    <title>Quản trị - Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <sitemesh:write property='head'/>
@@ -147,7 +147,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h5 class="mb-0" style="color: #2c3e50;">
-                                <sitemesh:write property='title'/>
+                                Admin Dashboard
                             </h5>
                         </div>
                         <div class="user-info">

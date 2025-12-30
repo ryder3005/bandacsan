@@ -19,13 +19,15 @@ public class Springboot3412Application {
 
         SpringApplication.run(Springboot3412Application.class, args);
     }
-    @Bean
-    public FilterRegistrationBean<CustomSiteMeshFilter> sitmeshFilter() {
-        FilterRegistrationBean<CustomSiteMeshFilter> filterFilterRegistrationBean= new FilterRegistrationBean<CustomSiteMeshFilter>();
-        filterFilterRegistrationBean.setFilter(new CustomSiteMeshFilter());
-        filterFilterRegistrationBean.addUrlPatterns("/*");
-        return filterFilterRegistrationBean;
-    }
+    // Tạm thời tắt SiteMesh: nếu muốn bật lại, bỏ comment phần dưới
+    // @Bean
+    // public FilterRegistrationBean<CustomSiteMeshFilter> sitmeshFilter() {
+    //     FilterRegistrationBean<CustomSiteMeshFilter> filterFilterRegistrationBean = new FilterRegistrationBean<CustomSiteMeshFilter>();
+    //     filterFilterRegistrationBean.setFilter(new CustomSiteMeshFilter());
+    //     filterFilterRegistrationBean.addUrlPatterns("/*");
+    //     filterFilterRegistrationBean.setOrder(1);
+    //     return filterFilterRegistrationBean;
+    // }
     @Bean
     CommandLineRunner init(IStorageService storageService) {
         return (args -> {
