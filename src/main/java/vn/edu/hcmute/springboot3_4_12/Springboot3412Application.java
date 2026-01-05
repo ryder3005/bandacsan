@@ -9,25 +9,17 @@ import org.springframework.context.annotation.Bean;
 import vn.edu.hcmute.springboot3_4_12.config.CustomSiteMeshFilter;
 import vn.edu.hcmute.springboot3_4_12.config.StorageProperties;
 import vn.edu.hcmute.springboot3_4_12.service.IStorageService;
+
 @EnableConfigurationProperties(StorageProperties.class)
 
 @SpringBootApplication
 public class Springboot3412Application {
 
-
     public static void main(String[] args) {
 
         SpringApplication.run(Springboot3412Application.class, args);
     }
-    // Tạm thời tắt SiteMesh: nếu muốn bật lại, bỏ comment phần dưới
-    // @Bean
-    // public FilterRegistrationBean<CustomSiteMeshFilter> sitmeshFilter() {
-    //     FilterRegistrationBean<CustomSiteMeshFilter> filterFilterRegistrationBean = new FilterRegistrationBean<CustomSiteMeshFilter>();
-    //     filterFilterRegistrationBean.setFilter(new CustomSiteMeshFilter());
-    //     filterFilterRegistrationBean.addUrlPatterns("/*");
-    //     filterFilterRegistrationBean.setOrder(1);
-    //     return filterFilterRegistrationBean;
-    // }
+
     @Bean
     CommandLineRunner init(IStorageService storageService) {
         return (args -> {
