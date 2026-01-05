@@ -1,10 +1,9 @@
-package vn.edu.hcmute.springboot3_4_12.controller.user;
+package vn.edu.hcmute.springboot3_4_12.controller.vendor;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.edu.hcmute.springboot3_4_12.dto.ChatMessageDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.ChatRoomDTO;
 import vn.edu.hcmute.springboot3_4_12.service.IChatService;
@@ -14,9 +13,9 @@ import vn.edu.hcmute.springboot3_4_12.entity.User;
 import java.util.List;
 
 @Controller
-@RequestMapping("/user/chat")
+@RequestMapping("/vendor/chat")
 @RequiredArgsConstructor
-public class ChatController {
+public class VendorChatController {
 
     private final IChatService chatService;
 
@@ -30,10 +29,10 @@ public class ChatController {
         try {
             List<ChatRoomDTO> rooms = chatService.getUserChatRooms(user.getId());
             model.addAttribute("chatRooms", rooms);
-            return "user/chat-rooms";
+            return "vendor/chat-rooms";
         } catch (Exception e) {
             model.addAttribute("error", "Không thể tải phòng chat: " + e.getMessage());
-            return "user/chat-rooms";
+            return "vendor/chat-rooms";
         }
     }
 
@@ -50,10 +49,10 @@ public class ChatController {
             model.addAttribute("chatRoom", chatRoom); // Pass ChatRoom info for header
             model.addAttribute("messages", chatRoom.getMessages());
             model.addAttribute("currentUserId", user.getId());
-            return "user/chat-room";
+            return "vendor/chat-room";
         } catch (Exception e) {
-            e.printStackTrace(); // Log error to console for debugging
-            return "redirect:/user/chat?error=" + e.getMessage();
+            e.printStackTrace();
+            return "redirect:/vendor/chat?error=" + e.getMessage();
         }
     }
 
@@ -62,7 +61,6 @@ public class ChatController {
     public List<ChatMessageDTO> getRoomMessages(@PathVariable Long roomId, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
-            // Return empty list instead of 500 error for unauthenticated polling
             return List.of();
         }
         try {
@@ -84,23 +82,5 @@ public class ChatController {
         }
 
         return chatService.sendMessage(roomId, user.getId(), message);
-    }
-
-    @GetMapping("/start/{vendorId}")
-    public String startChat(@PathVariable Long vendorId,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        try {
-            ChatRoomDTO room = chatService.getOrCreateChatRoom(user.getId(), vendorId);
-            return "redirect:/user/chat/room/" + room.getId();
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Không thể bắt đầu chat: " + e.getMessage());
-            return "redirect:/user/products";
-        }
     }
 }

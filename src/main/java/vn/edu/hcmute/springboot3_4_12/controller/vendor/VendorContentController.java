@@ -28,6 +28,7 @@ public class VendorContentController {
     private final VendorService vendorService;
     private final VendorRepository vendorRepository;
     private final ProductRepository productRepository;
+    private final vn.edu.hcmute.springboot3_4_12.repository.OrderRepository orderRepository;
 
     @GetMapping("/products")
     public String products(Model model, HttpSession session) {
@@ -40,8 +41,8 @@ public class VendorContentController {
                 // Chỉ lấy sản phẩm của vendor này
                 var vendor = vendorOpt.get();
                 var products = productService.getAll().stream()
-                    .filter(p -> p.getVendorId() != null && p.getVendorId().equals(vendor.getId()))
-                    .collect(java.util.stream.Collectors.toList());
+                        .filter(p -> p.getVendorId() != null && p.getVendorId().equals(vendor.getId()))
+                        .collect(java.util.stream.Collectors.toList());
                 model.addAttribute("products", products);
             } else {
                 // Không tìm thấy vendor, trả về danh sách rỗng
@@ -61,7 +62,31 @@ public class VendorContentController {
     }
 
     @GetMapping("/orders")
-    public String orders(Model model) {
+    public String orders(Model model, HttpSession session) {
+        // Get user from session
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            // Find vendor by user
+            var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
+            if (vendorOpt.isPresent()) {
+                var vendor = vendorOpt.get();
+
+                // Get all orders that contain products from this vendor
+                var allOrders = orderRepository.findAll();
+                var vendorOrders = allOrders.stream()
+                        .filter(order -> order.getItems() != null && order.getItems().stream()
+                                .anyMatch(item -> item.getProduct() != null &&
+                                        item.getProduct().getVendor() != null &&
+                                        item.getProduct().getVendor().getId().equals(vendor.getId())))
+                        .collect(java.util.stream.Collectors.toList());
+
+                model.addAttribute("orders", vendorOrders);
+            } else {
+                model.addAttribute("orders", new java.util.ArrayList<>());
+            }
+        } else {
+            model.addAttribute("orders", new java.util.ArrayList<>());
+        }
         return "vendor/orders";
     }
 
@@ -131,9 +156,9 @@ public class VendorContentController {
                         var categories = productEntity.get().getCategories();
                         if (categories != null) {
                             var categoryIds = categories.stream()
-                                .map(cat -> cat.getId())
-                                .filter(catId -> catId != null)
-                                .collect(java.util.stream.Collectors.toList());
+                                    .map(cat -> cat.getId())
+                                    .filter(catId -> catId != null)
+                                    .collect(java.util.stream.Collectors.toList());
                             model.addAttribute("selectedCategoryIds", categoryIds);
                         } else {
                             model.addAttribute("selectedCategoryIds", new java.util.ArrayList<>());
@@ -202,8 +227,8 @@ public class VendorContentController {
             // Xử lý categories
             if (categoryIds != null && categoryIds.length > 0) {
                 dto.setCategoryIds(java.util.Arrays.stream(categoryIds)
-                    .map(Long::parseLong)
-                    .collect(java.util.stream.Collectors.toList()));
+                        .map(Long::parseLong)
+                        .collect(java.util.stream.Collectors.toList()));
             }
 
             // Tạo sản phẩm (không có file upload trong form đơn giản này)
@@ -246,8 +271,8 @@ public class VendorContentController {
             // Validation cơ bản
             if (nameVi == null || nameVi.trim().isEmpty()) {
                 String redirectUrl = (idStr != null && !idStr.trim().isEmpty())
-                    ? "/vendor/products/edit/" + idStr + "?error=Tên sản phẩm tiếng Việt không được để trống"
-                    : "/vendor/products/create?error=Tên sản phẩm tiếng Việt không được để trống";
+                        ? "/vendor/products/edit/" + idStr + "?error=Tên sản phẩm tiếng Việt không được để trống"
+                        : "/vendor/products/create?error=Tên sản phẩm tiếng Việt không được để trống";
                 return "redirect:" + redirectUrl;
             }
 
@@ -263,8 +288,8 @@ public class VendorContentController {
             // Xử lý categories
             if (categoryIds != null && categoryIds.length > 0) {
                 dto.setCategoryIds(java.util.Arrays.stream(categoryIds)
-                    .map(Long::parseLong)
-                    .collect(java.util.stream.Collectors.toList()));
+                        .map(Long::parseLong)
+                        .collect(java.util.stream.Collectors.toList()));
             }
 
             if (idStr != null && !idStr.trim().isEmpty()) {
@@ -318,6 +343,58 @@ public class VendorContentController {
         } catch (Exception e) {
             e.printStackTrace();
             return "redirect:/vendor/products?error=Có lỗi xảy ra khi xóa sản phẩm: " + e.getMessage();
+        }
+    }
+
+    @GetMapping("/shop/update")
+    public String shopUpdatePage(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
+            if (vendorOpt.isPresent()) {
+                var vendor = vendorOpt.get();
+                var vendorDTO = vendorService.findById(vendor.getId());
+                model.addAttribute("vendor", vendorDTO);
+                return "vendor/shop-update";
+            }
+        }
+        return "redirect:/vendor/shop";
+    }
+
+    @PostMapping("/shop/update")
+    public String updateShop(HttpServletRequest request, HttpSession session, Model model) {
+        try {
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
+            if (!vendorOpt.isPresent()) {
+                return "redirect:/vendor/shop?error=Shop not found";
+            }
+            var vendor = vendorOpt.get();
+
+            String storeName = request.getParameter("storeName");
+            String phone = request.getParameter("phone");
+            String address = request.getParameter("address");
+            String descriptionVi = request.getParameter("descriptionVi");
+            String descriptionEn = request.getParameter("descriptionEn");
+
+            vn.edu.hcmute.springboot3_4_12.dto.VendorRequestDTO dto = new vn.edu.hcmute.springboot3_4_12.dto.VendorRequestDTO();
+            dto.setStoreName(storeName);
+            dto.setPhone(phone);
+            dto.setAddress(address);
+            dto.setDescriptionVi(descriptionVi);
+            dto.setDescriptionEn(descriptionEn);
+            dto.setUserId(user.getId());
+
+            vendorService.update(vendor.getId(), dto);
+
+            return "redirect:/vendor/shop?success=Cập nhật thông tin shop thành công";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/vendor/shop/update?error=" + e.getMessage();
         }
     }
 }

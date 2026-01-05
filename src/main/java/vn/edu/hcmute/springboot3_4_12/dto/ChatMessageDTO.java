@@ -16,5 +16,9 @@ public class ChatMessageDTO {
     private String senderName;
     private String message;
     private LocalDateTime timestamp;
-    private boolean isFromCurrentUser;
+    private boolean fromCurrentUser;
+
+    public java.util.Date getTimestampDate() {
+        return timestamp != null ? java.sql.Timestamp.valueOf(timestamp) : null;
+    }
 }

@@ -26,174 +26,200 @@ import java.util.stream.Collectors;
 @Transactional
 public class ChatService implements IChatService {
 
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final UserRepository userRepository;
-    private final VendorRepository vendorRepository;
+        private final ChatRoomRepository chatRoomRepository;
+        private final ChatMessageRepository chatMessageRepository;
+        private final UserRepository userRepository;
+        private final VendorRepository vendorRepository;
 
-    @Override
-    public ChatRoomDTO getOrCreateChatRoom(Long customerId, Long vendorId) {
-        Optional<ChatRoom> existingRoom = chatRoomRepository.findByCustomer_IdAndVendor_Id(customerId, vendorId);
+        @Override
+        public ChatRoomDTO getOrCreateChatRoom(Long customerId, Long vendorId) {
+                Optional<ChatRoom> existingRoom = chatRoomRepository.findByCustomer_IdAndVendor_Id(customerId,
+                                vendorId);
 
-        if (existingRoom.isPresent()) {
-            return convertToDTO(existingRoom.get(), customerId);
+                if (existingRoom.isPresent()) {
+                        return convertToDTO(existingRoom.get(), customerId);
+                }
+
+                // Create new room
+                User customer = userRepository.findById(customerId)
+                                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+                Vendor vendor = vendorRepository.findById(vendorId)
+                                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+                ChatRoom room = new ChatRoom();
+                room.setCustomer(customer);
+                room.setVendor(vendor);
+
+                room = chatRoomRepository.save(room);
+                return convertToDTO(room, customerId);
         }
 
-        // Create new room
-        User customer = userRepository.findById(customerId)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        @Override
+        public List<ChatRoomDTO> getUserChatRooms(Long userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Vendor vendor = vendorRepository.findById(vendorId)
-                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+                List<ChatRoom> rooms;
 
-        ChatRoom room = new ChatRoom();
-        room.setCustomer(customer);
-        room.setVendor(vendor);
+                if ("VENDOR".equals(user.getRole())) {
+                        // Vendor sees rooms with all customers
+                        Vendor vendor = vendorRepository.findVendorByUser_Id(userId)
+                                        .orElseThrow(() -> new RuntimeException("Vendor not found"));
+                        rooms = chatRoomRepository.findByVendor_Id(vendor.getId());
+                } else {
+                        // Customer sees rooms with vendors
+                        rooms = chatRoomRepository.findByCustomer_Id(userId);
+                }
 
-        room = chatRoomRepository.save(room);
-        return convertToDTO(room, customerId);
-    }
-
-    @Override
-    public List<ChatRoomDTO> getUserChatRooms(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        List<ChatRoom> rooms;
-
-        if ("VENDOR".equals(user.getRole())) {
-            // Vendor sees rooms with all customers
-            Vendor vendor = vendorRepository.findVendorByUser_Id(userId)
-                    .orElseThrow(() -> new RuntimeException("Vendor not found"));
-            rooms = chatRoomRepository.findAll().stream()
-                    .filter(room -> room.getVendor().getId().equals(vendor.getId()))
-                    .collect(Collectors.toList());
-        } else {
-            // Customer sees rooms with vendors
-            rooms = chatRoomRepository.findAll().stream()
-                    .filter(room -> room.getCustomer().getId().equals(userId))
-                    .collect(Collectors.toList());
+                return rooms.stream()
+                                .map(room -> convertToDTO(room, userId))
+                                .collect(Collectors.toList());
         }
 
-        return rooms.stream()
-                .map(room -> convertToDTO(room, userId))
-                .collect(Collectors.toList());
-    }
+        @Override
+        public ChatMessageDTO sendMessage(Long roomId, Long senderId, String message) {
+                ChatRoom room = chatRoomRepository.findById(roomId)
+                                .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
-    @Override
-    public ChatMessageDTO sendMessage(Long roomId, Long senderId, String message) {
-        ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+                User sender = userRepository.findById(senderId)
+                                .orElseThrow(() -> new RuntimeException("Sender not found"));
 
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
+                // Validate sender is part of the room
+                Long customerId = room.getCustomer() != null ? room.getCustomer().getId() : null;
+                Long vendorUserId = (room.getVendor() != null && room.getVendor().getUser() != null)
+                                ? room.getVendor().getUser().getId()
+                                : null;
 
-        // Validate sender is part of the room
-        boolean isValidSender = room.getCustomer().getId().equals(senderId) ||
-                               room.getVendor().getUser().getId().equals(senderId);
+                boolean isValidSender = (customerId != null && customerId.equals(senderId)) ||
+                                (vendorUserId != null && vendorUserId.equals(senderId));
 
-        if (!isValidSender) {
-            throw new RuntimeException("User is not part of this chat room");
+                if (!isValidSender) {
+                        throw new RuntimeException("User is not part of this chat room");
+                }
+
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setRoom(room);
+                chatMessage.setSender(sender);
+                chatMessage.setMessage(message);
+                chatMessage.setTimestamp(LocalDateTime.now());
+
+                chatMessage = chatMessageRepository.save(chatMessage);
+
+                return convertMessageToDTO(chatMessage, senderId);
         }
 
-        ChatMessage chatMessage = new ChatMessage();
-        chatMessage.setRoom(room);
-        chatMessage.setSender(sender);
-        chatMessage.setMessage(message);
-        chatMessage.setTimestamp(LocalDateTime.now());
+        @Override
+        public List<ChatMessageDTO> getRoomMessages(Long roomId, Long userId) {
+                ChatRoom room = chatRoomRepository.findById(roomId)
+                                .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
-        chatMessage = chatMessageRepository.save(chatMessage);
+                // Validate user is part of the room
+                // Validate user is part of the room
+                Long customerId = room.getCustomer() != null ? room.getCustomer().getId() : null;
+                Long vendorUserId = (room.getVendor() != null && room.getVendor().getUser() != null)
+                                ? room.getVendor().getUser().getId()
+                                : null;
 
-        return convertMessageToDTO(chatMessage, senderId);
-    }
+                boolean isValidUser = (customerId != null && customerId.equals(userId)) ||
+                                (vendorUserId != null && vendorUserId.equals(userId));
 
-    @Override
-    public List<ChatMessageDTO> getRoomMessages(Long roomId, Long userId) {
-        ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+                if (!isValidUser) {
+                        throw new RuntimeException("User is not part of this chat room");
+                }
 
-        // Validate user is part of the room
-        boolean isValidUser = room.getCustomer().getId().equals(userId) ||
-                             room.getVendor().getUser().getId().equals(userId);
+                List<ChatMessage> messages = chatMessageRepository.findByRoom_IdOrderByTimestampAsc(roomId);
 
-        if (!isValidUser) {
-            throw new RuntimeException("User is not part of this chat room");
+                return messages.stream()
+                                .map(message -> convertMessageToDTO(message, userId))
+                                .collect(Collectors.toList());
         }
 
-        List<ChatMessage> messages = chatMessageRepository.findByRoom_IdOrderByTimestampAsc(roomId);
+        @Override
+        public ChatRoomDTO getChatRoomInfo(Long roomId, Long userId) {
+                ChatRoom room = chatRoomRepository.findById(roomId)
+                                .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
-        return messages.stream()
-                .map(message -> convertMessageToDTO(message, userId))
-                .collect(Collectors.toList());
-    }
+                // Validate user is part of the room
+                Long customerId = room.getCustomer() != null ? room.getCustomer().getId() : null;
+                Long vendorUserId = (room.getVendor() != null && room.getVendor().getUser() != null)
+                                ? room.getVendor().getUser().getId()
+                                : null;
 
-    @Override
-    public int getUnreadCount(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                boolean isValidUser = (customerId != null && customerId.equals(userId)) ||
+                                (vendorUserId != null && vendorUserId.equals(userId));
 
-        if ("VENDOR".equals(user.getRole())) {
-            Vendor vendor = vendorRepository.findVendorByUser_Id(userId)
-                    .orElseThrow(() -> new RuntimeException("Vendor not found"));
+                if (!isValidUser) {
+                        throw new RuntimeException("User is not part of this chat room");
+                }
 
-            return chatRoomRepository.findAll().stream()
-                    .filter(room -> room.getVendor().getId().equals(vendor.getId()))
-                    .mapToInt(room -> chatMessageRepository.findByRoom_IdAndSender_IdNotOrderByTimestampDesc(
-                            room.getId(), userId).size())
-                    .sum();
-        } else {
-            return chatRoomRepository.findAll().stream()
-                    .filter(room -> room.getCustomer().getId().equals(userId))
-                    .mapToInt(room -> chatMessageRepository.findByRoom_IdAndSender_IdNotOrderByTimestampDesc(
-                            room.getId(), userId).size())
-                    .sum();
+                return convertToDTO(room, userId);
         }
-    }
 
-    @Override
-    public void markAsRead(Long roomId, Long userId) {
-        // For simplicity, we'll just mark messages as "read" by not showing unread count
-        // In a real app, you'd add a read status to messages
-    }
+        @Override
+        public int getUnreadCount(Long userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    private ChatRoomDTO convertToDTO(ChatRoom room, Long currentUserId) {
-        List<ChatMessage> messages = chatMessageRepository.findByRoom_IdOrderByTimestampAsc(room.getId());
-        String lastMessage = messages.isEmpty() ? "" :
-                messages.get(messages.size() - 1).getMessage();
+                List<ChatRoom> rooms;
+                if ("VENDOR".equals(user.getRole())) {
+                        Vendor vendor = vendorRepository.findVendorByUser_Id(userId)
+                                        .orElseThrow(() -> new RuntimeException("Vendor not found"));
+                        rooms = chatRoomRepository.findByVendor_Id(vendor.getId());
+                } else {
+                        rooms = chatRoomRepository.findByCustomer_Id(userId);
+                }
 
-        String lastMessageTime = messages.isEmpty() ? "" :
-                messages.get(messages.size() - 1).getTimestamp()
-                        .format(DateTimeFormatter.ofPattern("HH:mm dd/MM"));
+                return rooms.stream()
+                                .mapToInt(room -> chatMessageRepository
+                                                .findByRoom_IdAndSender_IdNotOrderByTimestampDesc(
+                                                                room.getId(), userId)
+                                                .size())
+                                .sum();
+        }
 
-        int unreadCount = chatMessageRepository.findByRoom_IdAndSender_IdNotOrderByTimestampDesc(
-                room.getId(), currentUserId).size();
+        @Override
+        public void markAsRead(Long roomId, Long userId) {
+                // For simplicity, we'll just mark messages as "read" by not showing unread
+                // count
+                // In a real app, you'd add a read status to messages
+        }
 
-        List<ChatMessageDTO> messageDTOs = messages.stream()
-                .map(msg -> convertMessageToDTO(msg, currentUserId))
-                .collect(Collectors.toList());
+        private ChatRoomDTO convertToDTO(ChatRoom room, Long currentUserId) {
+                List<ChatMessage> messages = chatMessageRepository.findByRoom_IdOrderByTimestampAsc(room.getId());
+                String lastMessage = messages.isEmpty() ? "" : messages.get(messages.size() - 1).getMessage();
 
-        return new ChatRoomDTO(
-                room.getId(),
-                room.getCustomer().getId(),
-                room.getCustomer().getUsername(),
-                room.getVendor().getId(),
-                room.getVendor().getStoreName(),
-                lastMessage,
-                lastMessageTime,
-                unreadCount,
-                messageDTOs
-        );
-    }
+                String lastMessageTime = messages.isEmpty() ? ""
+                                : messages.get(messages.size() - 1).getTimestamp()
+                                                .format(DateTimeFormatter.ofPattern("HH:mm dd/MM"));
 
-    private ChatMessageDTO convertMessageToDTO(ChatMessage message, Long currentUserId) {
-        return new ChatMessageDTO(
-                message.getId(),
-                message.getRoom().getId(),
-                message.getSender().getId(),
-                message.getSender().getUsername(),
-                message.getMessage(),
-                message.getTimestamp(),
-                message.getSender().getId().equals(currentUserId)
-        );
-    }
+                int unreadCount = chatMessageRepository.findByRoom_IdAndSender_IdNotOrderByTimestampDesc(
+                                room.getId(), currentUserId).size();
+
+                List<ChatMessageDTO> messageDTOs = messages.stream()
+                                .map(msg -> convertMessageToDTO(msg, currentUserId))
+                                .collect(Collectors.toList());
+
+                return new ChatRoomDTO(
+                                room.getId(),
+                                room.getCustomer().getId(),
+                                room.getCustomer().getUsername(),
+                                room.getVendor().getId(),
+                                room.getVendor().getStoreName(),
+                                lastMessage,
+                                lastMessageTime,
+                                unreadCount,
+                                messageDTOs);
+        }
+
+        private ChatMessageDTO convertMessageToDTO(ChatMessage message, Long currentUserId) {
+                return new ChatMessageDTO(
+                                message.getId(),
+                                message.getRoom().getId(),
+                                message.getSender().getId(),
+                                message.getSender().getUsername(),
+                                message.getMessage(),
+                                message.getTimestamp(),
+                                message.getSender().getId().equals(currentUserId));
+        }
 }

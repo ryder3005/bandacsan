@@ -7,7 +7,14 @@ import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmute.springboot3_4_12.entity.User;
 import vn.edu.hcmute.springboot3_4_12.repository.VendorRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
+import vn.edu.hcmute.springboot3_4_12.repository.OrderRepository;
+import vn.edu.hcmute.springboot3_4_12.entity.Order;
+import vn.edu.hcmute.springboot3_4_12.service.IChatService;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -15,8 +22,10 @@ public class VendorPageController {
 
     private final VendorRepository vendorRepository;
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final IChatService chatService;
 
-    @GetMapping({"/vendor", "/vendor/dashboard"})
+    @GetMapping({ "/vendor", "/vendor/dashboard" })
     public String dashboard(Model model, HttpSession session) {
         try {
             User user = (User) session.getAttribute("user");
@@ -28,14 +37,38 @@ public class VendorPageController {
                     // Thống kê sản phẩm
                     long totalProducts = productRepository.findByVendor_Id(vendor.getId()).size();
 
-                    // Thống kê đơn hàng (tạm thời = 0 vì chưa implement order system)
-                    long totalOrders = 0;
+                    // Thống kê đơn hàng - đếm orders có sản phẩm của vendor này
+                    List<Order> allOrders = orderRepository.findAll();
+                    long totalOrders = allOrders.stream()
+                            .filter(order -> order.getItems() != null && order.getItems().stream()
+                                    .anyMatch(item -> item.getProduct() != null &&
+                                            item.getProduct().getVendor() != null &&
+                                            item.getProduct().getVendor().getId().equals(vendor.getId())))
+                            .count();
 
-                    // Thống kê doanh thu tháng này (tạm thời = 0 vì chưa implement order system)
-                    double monthlyRevenue = 0.0;
+                    // Thống kê doanh thu tháng này
+                    YearMonth currentMonth = YearMonth.now();
+                    LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
+                    LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
 
-                    // Thống kê tin nhắn (tạm thời = 0 vì chưa implement chat)
+                    double monthlyRevenue = allOrders.stream()
+                            .filter(order -> order.getOrderDate() != null &&
+                                    !order.getOrderDate().isBefore(startOfMonth) &&
+                                    !order.getOrderDate().isAfter(endOfMonth))
+                            .flatMap(order -> order.getItems().stream())
+                            .filter(item -> item.getProduct() != null &&
+                                    item.getProduct().getVendor() != null &&
+                                    item.getProduct().getVendor().getId().equals(vendor.getId()))
+                            .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                            .sum();
+
+                    // Thống kê tin nhắn chưa đọc
                     long unreadMessages = 0;
+                    try {
+                        unreadMessages = chatService.getUnreadCount(user.getId());
+                    } catch (Exception e) {
+                        // Nếu có lỗi, giữ giá trị 0
+                    }
 
                     // Truyền dữ liệu vào model
                     model.addAttribute("totalProducts", totalProducts);
@@ -55,4 +88,3 @@ public class VendorPageController {
         }
     }
 }
-

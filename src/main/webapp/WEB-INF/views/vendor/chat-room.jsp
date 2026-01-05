@@ -238,7 +238,7 @@
                                     <div class="online-status"></div>
                                 </div>
                                 <div class="ms-3">
-                                    <h5 class="mb-0">${chatRoom.vendorName}</h5>
+                                    <h5 class="mb-0">${chatRoom.customerName}</h5>
                                     <small class="opacity-75">Đang hoạt động</small>
                                 </div>
                             </div>
@@ -277,12 +277,12 @@
                                     <div class="empty-chat">
                                         <i class="fas fa-comments"></i>
                                         <h5>Bắt đầu cuộc trò chuyện</h5>
-                                        <p>Gửi tin nhắn đầu tiên để bắt đầu trò chuyện với nhà bán hàng</p>
+                                        <p>Gửi tin nhắn đầu tiên để bắt đầu trò chuyện với khách hàng</p>
                                     </div>
                                 </c:otherwise>
                             </c:choose>
                             <div class="typing-indicator" id="typingIndicator">
-                                Nhà bán hàng đang trả lời...
+                                Khách hàng đang trả lời...
                             </div>
                         </div>
 
@@ -340,7 +340,7 @@
                         document.getElementById('sendButton').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
                         try {
-                            const response = await fetch('<c:url value="/user/chat/send"/>', {
+                            const response = await fetch('<c:url value="/vendor/chat/send"/>', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -426,7 +426,7 @@
                     // Poll for new messages (in a real app, you'd use WebSocket)
                     setInterval(async function () {
                         try {
-                            const response = await fetch('<c:url value="/user/chat/room/"/>' + roomId + '/messages');
+                            const response = await fetch('<c:url value="/vendor/chat/room/"/>' + roomId + '/messages');
                             if (response.ok) {
                                 const newMessages = await response.json();
                                 // Add new messages to chat
