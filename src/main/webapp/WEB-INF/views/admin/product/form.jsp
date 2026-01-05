@@ -27,8 +27,8 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
-    
-    <form method="post" action="<c:url value='${not empty product ? "/admin/products/save" : "/admin/products/create"}' />" id="productForm">
+
+    <form id="productForm" enctype="multipart/form-data">
         <c:if test="${not empty product}">
             <input type="hidden" name="id" value="${product.id}" />
         </c:if>
@@ -127,8 +127,85 @@
         </div>
     </form>
 </div>
+<script>
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
 
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        const productId = "${product.id}";
+
+        // 1. Lấy dữ liệu từ Form
+// Trong sự kiện submit form
+        const productData = {
+            nameVi: document.getElementById('nameVi').value,
+            nameEn: document.getElementById('nameEn').value,
+            descriptionVi: document.getElementById('descriptionVi').value,
+            descriptionEn: document.getElementById('descriptionEn').value,
+            price: parseFloat(document.getElementById('price').value),
+            stock: parseInt(document.getElementById('stock').value),
+            categoryIds: Array.from(document.getElementById('categoryIds').selectedOptions).map(opt => parseInt(opt.value)),
+
+            // BỔ SUNG TRƯỜNG NÀY:
+            // Nếu bạn có input <select id="vendorId"> trong form:
+            vendorId: parseInt(document.getElementById('vendorId').value)
+
+            // Hoặc nếu fix cứng ID (nếu chưa có giao diện chọn vendor):
+            // vendorId: 1
+        };
+
+        // 2. Tạo FormData (Bắt buộc để gửi file)
+        const formData = new FormData();
+
+        // Thêm JSON data dưới dạng Blob
+        formData.append('product', new Blob([JSON.stringify(productData)], {
+            type: 'application/json'
+        }));
+
+        // 3. Thêm file hình ảnh từ input
+        const fileInput = document.getElementById('files');
+        if (fileInput.files.length > 0) {
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append('files', fileInput.files[i]);
+            }
+        }
+
+        try {
+            let url = '<c:url value="/admin/api/products"/>';
+            let method = 'POST';
+
+            if (productId && productId !== "") {
+                url += '/' + productId;
+                method = 'PUT'; // API Update
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                // KHÔNG set Header Content-Type, trình duyệt sẽ tự set Multipart/Form-Data với Boundary
+                body: formData,
+                headers: {
+                    // Nếu có dùng Spring Security:
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value
+                }
+            });
+
+            if (response.ok) {
+                showToast('Lưu sản phẩm thành công!', 'success');
+                setTimeout(() => window.location.href = '<c:url value="/admin/products"/>', 1000);
+            } else {
+                const error = await response.text();
+                showToast('Lỗi: ' + error, 'danger');
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối máy chủ', 'danger');
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+</script>
 <jsp:include page="/WEB-INF/common/footer.jsp" />
+<jsp:include page="/WEB-INF/common/Toast.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

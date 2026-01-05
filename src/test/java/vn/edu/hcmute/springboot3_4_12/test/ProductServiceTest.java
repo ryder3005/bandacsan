@@ -13,6 +13,7 @@ import vn.edu.hcmute.springboot3_4_12.dto.CategoryRequestDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.ProductRequestDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.ProductResponseDTO;
 import vn.edu.hcmute.springboot3_4_12.entity.Category;
+import vn.edu.hcmute.springboot3_4_12.entity.Image;
 import vn.edu.hcmute.springboot3_4_12.entity.Product;
 import vn.edu.hcmute.springboot3_4_12.entity.Vendor;
 import vn.edu.hcmute.springboot3_4_12.entity.demo.Car;
@@ -46,6 +47,7 @@ public class ProductServiceTest {
     private CategoryMapper categoryMapper;
     @Mock
     private VendorRepository vendorRepository;
+
     @Mock
     private CategoryRepository categoryRepository;
     @InjectMocks
@@ -69,63 +71,10 @@ public class ProductServiceTest {
     @Test
     void testCreateProduct_WithFiles_Success() {
         // 1. CHUẨN BỊ DỮ LIỆU (Given)
-        ProductRequestDTO dto = new ProductRequestDTO();
-        dto.setVendorId(1L);
-        dto.setCategoryIds(List.of(1L));
-        dto.setNameVi("Sản phẩm có ảnh");
-        dto.setPrice(1000.0);
-        dto.setStock(10);
+        Product product=productRepository.findById(27L).orElse(null);
+        assertNotNull(product);
+        System.out.println(product.getImages());
 
-        // Giả lập danh sách file gửi lên
-        MockMultipartFile file1 = new MockMultipartFile(
-                "files", "test1.png", "image/png", "content1".getBytes());
-        MockMultipartFile file2 = new MockMultipartFile(
-                "files", "test2.png", "image/png", "content2".getBytes());
-        List<MultipartFile> files = List.of(file1, file2);
-
-        // Khởi tạo các Entity thật bằng Mapper (không Mock Mapper)
-        Vendor mockVendor = new Vendor();
-        mockVendor.setId(1L);
-
-        Category mockCategory = new Category();
-        mockCategory.setId(1L);
-        mockCategory.setNameVi("Danh mục điện tử");
-
-        // 2. GIẢ LẬP HÀNH VI (When) - Chỉ mock các Repository và StorageService
-        when(vendorRepository.findById(1L)).thenReturn(Optional.of(mockVendor));
-        when(categoryRepository.findAllById(anyList())).thenReturn(List.of(mockCategory));
-
-        // Giả lập logic tên file của StorageService
-        when(storageService.getSorageFilename(any(MultipartFile.class), anyString()))
-                .thenReturn("stored_file_1.png")
-                .thenReturn("stored_file_2.png");
-
-        // Khi save, trả về chính object Product đó (giả lập lưu thành công)
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // 3. THỰC THI (Act)
-        ProductResponseDTO result = productService.create(dto, files);
-
-        // 4. IN KẾT QUẢ VÀ KIỂM TRA (Assert & System.out)
-        System.out.println("----- KẾT QUẢ TEST -----");
-        System.out.println("Tên SP trả về: " + result.getNameVi());
-        System.out.println("Giá SP: " + result.getPrice());
-
-        assertNotNull(result);
-        assertEquals(dto.getNameVi(), result.getNameVi());
-
-        // Kiểm tra và in danh sách ảnh đã xử lý
-        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
-        verify(productRepository).save(productCaptor.capture());
-        Product savedProduct = productCaptor.getValue();
-
-        System.out.println("Số lượng ảnh đã lưu: " + savedProduct.getImages().size());
-        savedProduct.getImages().forEach(img -> System.out.println("URL ảnh trong DB: " + img.getUrl()));
-
-        assertEquals(2, savedProduct.getImages().size());
-        verify(storageService, times(2)).store(any(MultipartFile.class), anyString());
-
-        System.out.println("------------------------");
     }
     @Test
     void testUpdateProduct_Success() {

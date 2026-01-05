@@ -28,7 +28,7 @@
         </div>
     </c:if>
 
-    <form method="post" action="<c:url value='/vendor/products/save' />" id="productForm">
+    <form method="post" action="<c:url value='/vendor/products/save' />" id="productForm" >
         <c:if test="${not empty product}">
             <input type="hidden" name="id" value="${product.id}" />
         </c:if>
