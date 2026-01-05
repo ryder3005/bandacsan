@@ -38,22 +38,6 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <!-- Thông báo thành công -->
-                    <c:if test="${not empty success}">
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="bi bi-check-circle"></i> ${success}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
-
-                    <!-- Thông báo lỗi -->
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle"></i> ${error}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
-
                     <!-- Bảng danh sách -->
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">

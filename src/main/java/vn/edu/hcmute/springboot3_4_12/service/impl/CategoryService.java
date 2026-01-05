@@ -8,6 +8,7 @@ import vn.edu.hcmute.springboot3_4_12.dto.CategoryResponseDTO;
 import vn.edu.hcmute.springboot3_4_12.entity.Category;
 import vn.edu.hcmute.springboot3_4_12.mapper.CategoryMapper;
 import vn.edu.hcmute.springboot3_4_12.repository.CategoryRepository;
+import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
 import vn.edu.hcmute.springboot3_4_12.service.ICategoryService;
 
 import java.util.List;
@@ -20,6 +21,9 @@ public class CategoryService implements ICategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private ProductRepository productRepository;
 
     // Lưu ý: Không cần @Autowired CategoryMapper nếu dùng .INSTANCE
 
@@ -57,9 +61,27 @@ public class CategoryService implements ICategoryService {
     @Override
     @Transactional
     public void delete(Long id) {
-        if (!categoryRepository.existsById(id)) {
+        var categoryOpt = categoryRepository.findById(id);
+        if (categoryOpt.isEmpty()) {
             throw new RuntimeException("Không tìm thấy danh mục để xóa");
         }
+        
+        var category = categoryOpt.get();
+        
+        // Tìm tất cả products đang sử dụng category này
+        var productsUsingCategory = productRepository.findByCategories_Id(id);
+        
+        if (productsUsingCategory != null && !productsUsingCategory.isEmpty()) {
+            // Xóa category khỏi tất cả products trước khi xóa category
+            for (var product : productsUsingCategory) {
+                if (product.getCategories() != null) {
+                    product.getCategories().remove(category);
+                }
+            }
+            // Lưu lại các products đã được cập nhật
+            productRepository.saveAll(productsUsingCategory);
+        }
+        
         categoryRepository.deleteById(id);
     }
 

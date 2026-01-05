@@ -66,10 +66,11 @@
                             <!-- Form chỉnh sửa -->
                             <div class="mt-4">
                                 <h5 class="mb-3"><i class="bi bi-pencil-square"></i> Chỉnh sửa thông tin</h5>
-                                <form method="post" action="<c:url value='/profile/update'/>">
+                                <form method="post" action="<c:url value='/profile/update'/>" id="profileForm">
                                     <input type="hidden" name="id" value="${user.id}">
                                     <input type="hidden" name="username" value="${user.username}">
                                     <input type="hidden" name="role" value="${user.role}">
+                                    <input type="hidden" name="redirectUrl" id="redirectUrl" value="">
                                     
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
@@ -95,7 +96,7 @@
                                         <button type="submit" class="btn btn-primary">
                                             <i class="bi bi-save"></i> Lưu thay đổi
                                         </button>
-                                        <a href="<c:url value='/profile'/>" class="btn btn-secondary">
+                                        <a href="javascript:history.back()" class="btn btn-secondary">
                                             <i class="bi bi-x-circle"></i> Hủy
                                         </a>
                                     </div>
@@ -135,22 +136,61 @@
 </div>
 
 <jsp:include page="/WEB-INF/common/footer.jsp" />
+<jsp:include page="/WEB-INF/common/Toast.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Set redirect URL when form loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('profileForm');
+        if (form) {
+            // Lưu URL hiện tại trước khi submit (không phải trang profile)
+            const currentUrl = window.location.href;
+            if (!currentUrl.includes('/profile')) {
+                document.getElementById('redirectUrl').value = currentUrl;
+            } else {
+                // Nếu đang ở trang profile, lấy referer
+                const referer = document.referrer;
+                if (referer && !referer.includes('/profile')) {
+                    document.getElementById('redirectUrl').value = referer;
+                }
+            }
+        }
+        
+        // Show toast messages from flash attributes
+        <c:if test="${not empty successMessage}">
+            if (typeof showToast === 'function') {
+                showToast('${successMessage}', 'success');
+            }
+        </c:if>
+        <c:if test="${not empty errorMessage}">
+            if (typeof showToast === 'function') {
+                showToast('${errorMessage}', 'danger');
+            }
+        </c:if>
+    });
+    
     // Validate password confirmation
-    document.querySelector('form')?.addEventListener('submit', function(e) {
+    document.querySelector('#profileForm')?.addEventListener('submit', function(e) {
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
         
         if (password && password !== confirmPassword) {
             e.preventDefault();
-            alert('Mật khẩu xác nhận không khớp!');
+            if (typeof showToast === 'function') {
+                showToast('Mật khẩu xác nhận không khớp!', 'danger');
+            } else {
+                alert('Mật khẩu xác nhận không khớp!');
+            }
             return false;
         }
         
         if (password && password.length < 6) {
             e.preventDefault();
-            alert('Mật khẩu phải có ít nhất 6 ký tự!');
+            if (typeof showToast === 'function') {
+                showToast('Mật khẩu phải có ít nhất 6 ký tự!', 'danger');
+            } else {
+                alert('Mật khẩu phải có ít nhất 6 ký tự!');
+            }
             return false;
         }
     });

@@ -16,4 +16,8 @@ public interface IOrderService {
     List<OrderDTO> getOrdersByStatus(OrderStatus status);
     Order findOrderById(Long l );
     void updateStatus(long l, String paid);
+    OrderDTO confirmOrderByVendor(Long orderId, Long vendorId);
+    OrderDTO confirmDeliveredByUser(Long orderId, Long userId);
+    OrderDTO getOrderByIdForVendor(Long orderId, Long vendorId);
+    OrderDTO cancelOrderByUser(Long orderId, Long userId);
 }

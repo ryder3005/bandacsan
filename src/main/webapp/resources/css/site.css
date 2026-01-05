@@ -6,3 +6,61 @@ header h5, header h4 { margin:0; }
 footer .small { color: #cccccc; margin-top:4px; }
 button, .btn { border-radius:6px; }
 @media (max-width:576px) { .container { padding:0 12px; } }
+
+/* Order Status Widget - In Navbar Dropdown */
+.order-status-dropdown {
+    min-width: 300px !important;
+    max-width: 350px;
+}
+
+.order-status-dropdown .status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.order-status-dropdown .status-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #495057;
+}
+
+.order-status-dropdown .status-icon {
+    font-size: 16px;
+}
+
+.order-status-dropdown .status-count {
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: #e9ecef;
+    color: #0d6efd;
+    min-width: 30px;
+    text-align: center;
+}
+
+.order-status-dropdown .total-orders {
+    margin: 8px 0;
+    padding: 8px 0;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+    font-weight: 600;
+    color: #0d6efd;
+    font-size: 14px;
+}
+
+.order-status-dropdown .loading,
+.order-status-dropdown .error {
+    text-align: center;
+    padding: 15px;
+    color: #6c757d;
+    font-size: 13px;
+}
+
+.order-status-dropdown .error {
+    color: #dc3545;
+}

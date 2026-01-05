@@ -28,6 +28,38 @@
         <ul class="navbar-nav">
             <c:choose>
                 <c:when test="${not empty sessionScope.user}">
+                    <!-- Order Status Dropdown - Only for CUSTOMER or ADMIN -->
+                    <c:if test="${sessionScope.user.role == 'CUSTOMER' || sessionScope.user.role == 'ADMIN'}">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="orderStatusDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                📦 Đơn hàng
+                                <span id="order-status-badge" class="badge bg-warning text-dark ms-1" style="display:none;">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end order-status-dropdown" aria-labelledby="orderStatusDropdown" style="min-width: 300px;">
+                                <li>
+                                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                        <h6 class="mb-0">📦 Đơn hàng của tôi</h6>
+                                        <button class="btn btn-sm btn-link p-0 text-decoration-none" onclick="refreshOrderStatus(); return false;" title="Làm mới">
+                                            🔄
+                                        </button>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div id="order-status-widget-container" class="px-3 py-2">
+                                        <div class="text-center text-muted small">Đang tải...</div>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-center" href="<c:url value='/user/orders'/>">
+                                        <i class="bi bi-receipt"></i> Xem tất cả đơn hàng
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </c:if>
+                    
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" id="headerUserDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">

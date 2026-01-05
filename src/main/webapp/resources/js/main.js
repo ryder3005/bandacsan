@@ -52,3 +52,98 @@
 //         })
 //         .catch(err => console.error('Lỗi:', err));
 // }
+
+// Order Status Widget Functions
+function loadOrderStatusWidget() {
+    const widgetContainer = document.getElementById('order-status-widget-container');
+    if (!widgetContainer) {
+        console.log('Widget container not found');
+        return;
+    }
+
+    console.log('Loading order status widget...');
+    // Show loading
+    widgetContainer.innerHTML = '<div class="text-center text-muted small">Đang tải...</div>';
+
+    // Fetch order status data
+    fetch('/user/orders/status/summary')
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Order data received:', data);
+            if (data.error) {
+                widgetContainer.innerHTML = '<div class="error">Không thể tải dữ liệu: ' + data.error + '</div>';
+                return;
+            }
+            renderOrderStatusWidget(data);
+        })
+        .catch(error => {
+            console.error('Error loading order status:', error);
+            widgetContainer.innerHTML = '<div class="error">Lỗi kết nối: ' + error.message + '</div>';
+        });
+}
+
+function renderOrderStatusWidget(data) {
+    const widgetContainer = document.getElementById('order-status-widget-container');
+    const badge = document.getElementById('order-status-badge');
+    
+    const statusConfig = [
+        { key: 'pending', label: 'Chờ xử lý', icon: '⏳' },
+        { key: 'processing', label: 'Đang xử lý', icon: '⚙️' },
+        { key: 'shipping', label: 'Đang giao', icon: '🚚' },
+        { key: 'delivered', label: 'Đã giao', icon: '✅' },
+        { key: 'cancelled', label: 'Đã hủy', icon: '❌' }
+    ];
+
+    // Update badge
+    if (badge) {
+        const total = data.total || 0;
+        badge.textContent = total;
+        badge.style.display = total > 0 ? 'inline-block' : 'none';
+    }
+
+    let html = '';
+    statusConfig.forEach(status => {
+        const count = data[status.key] || 0;
+        html += `
+            <div class="status-item">
+                <span class="status-label">
+                    <span class="status-icon">${status.icon}</span>
+                    <span>${status.label}</span>
+                </span>
+                <span class="status-count">${count}</span>
+            </div>
+        `;
+    });
+
+    html += `
+        <div class="total-orders">
+            Tổng: ${data.total || 0} đơn hàng
+        </div>
+    `;
+
+    widgetContainer.innerHTML = html;
+}
+
+function refreshOrderStatus() {
+    loadOrderStatusWidget();
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    // Load order status widget if user is logged in
+    const widgetContainer = document.getElementById('order-status-widget-container');
+    console.log('Widget container found:', !!widgetContainer);
+    if (widgetContainer) {
+        loadOrderStatusWidget();
+        
+        // Auto refresh every 2 minutes
+        setInterval(loadOrderStatusWidget, 120000);
+    }
+});

@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!doctype html>
 <html lang="vi">
 <head>
@@ -7,6 +8,7 @@
     <title><sitemesh:write property='title'/></title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="<c:url value='/resources/css/site.css'/>"/>
     <sitemesh:write property='head'/>
     <style>
         html, body {
@@ -49,19 +51,24 @@
 
 <!-- Footer -->
 <footer class="bg-dark text-white py-3">
-    <div class="container d-flex justify-content-between align-items-center">
-        <div>
-            &copy; <%= java.time.Year.now() %> Bài tập: Quản lý Video
-        </div>
-        <div>
-            <a class="text-white" href="https://github.com" target="_blank">
-                GitHub Repo bài tập
-            </a>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="mb-3 text-white">Liên hệ</h6>
+                <p class="mb-2 text-white-50"><i class="bi bi-envelope text-primary"></i> Email: 23110101@student.hcmute.edu.vn</p>
+                <p class="mb-2 text-white-50"><i class="bi bi-telephone text-success"></i> Hotline: 0899956690</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p class="mb-0 text-white-50">
+                    &copy; <%= java.time.Year.now() %> Website Quảng bá và Kinh doanh Đặc sản Quê hương. Tất cả quyền được bảo lưu.
+                </p>
+            </div>
         </div>
     </div>
 </footer>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="<c:url value='/resources/js/main.js'/>"></script>
 </body>
 </html>

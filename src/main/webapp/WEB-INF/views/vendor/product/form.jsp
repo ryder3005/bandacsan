@@ -28,7 +28,7 @@
         </div>
     </c:if>
 
-    <form method="post" action="<c:url value='/vendor/products/save' />" id="productForm" >
+    <form method="post" action="<c:url value='/vendor/products/save' />" id="productForm" enctype="multipart/form-data">
         <c:if test="${not empty product}">
             <input type="hidden" name="id" value="${product.id}" />
         </c:if>
@@ -99,6 +99,38 @@
             </div>
         </div>
 
+        <!-- Upload hình ảnh -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="mb-3">
+                    <label for="files" class="form-label">Hình ảnh sản phẩm</label>
+                    <input type="file" class="form-control" id="files" name="files" multiple accept="image/*" />
+                    <small class="form-text text-muted">Có thể chọn nhiều hình ảnh (JPG, PNG, GIF)</small>
+                </div>
+                
+                <!-- Hiển thị ảnh hiện tại (nếu đang edit) -->
+                <c:if test="${not empty product && not empty product.imageUrls}">
+                    <div class="mb-3">
+                        <label class="form-label">Hình ảnh hiện tại:</label>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <c:forEach var="imgUrl" items="${product.imageUrls}">
+                                <div class="position-relative" style="width: 150px; height: 150px;">
+                                    <img src="<c:url value='/files/${imgUrl}' />" 
+                                         alt="Product Image" 
+                                         class="img-thumbnail" 
+                                         style="width: 100%; height: 100%; object-fit: cover;" />
+                                </div>
+                            </c:forEach>
+                        </div>
+                        <small class="form-text text-muted">Tải ảnh mới sẽ thay thế ảnh hiện tại</small>
+                    </div>
+                </c:if>
+                
+                <!-- Preview ảnh đã chọn -->
+                <div id="imagePreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+            </div>
+        </div>
+
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-warning">
                 <i class="bi bi-save"></i> Lưu
@@ -112,5 +144,35 @@
 
 <jsp:include page="/WEB-INF/common/footer.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Preview ảnh khi chọn
+    document.getElementById('files').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        const files = e.target.files;
+        if (files.length > 0) {
+            Array.from(files).forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'position-relative';
+                        div.style.width = '150px';
+                        div.style.height = '150px';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" 
+                                 alt="Preview ${index + 1}" 
+                                 class="img-thumbnail" 
+                                 style="width: 100%; height: 100%; object-fit: cover;" />
+                        `;
+                        preview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>

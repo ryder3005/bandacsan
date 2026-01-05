@@ -11,6 +11,7 @@ import vn.edu.hcmute.springboot3_4_12.service.IOrderService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,8 @@ public class OrderService implements IOrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final ICartService cartService;
+    private final VendorRepository vendorRepository;
+    private final VendorRevenueRepository vendorRevenueRepository;
 
     @Override
     public OrderDTO createOrder(Long userId, CheckoutRequestDTO request) {
@@ -41,7 +44,7 @@ public class OrderService implements IOrderService {
 
         Order order = new Order();
         order.setUser(user);
-
+        order.setOrderDate(LocalDateTime.now());
         order.setTotalAmount(cart.getTotalPrice());
         order.setStatus(OrderStatus.PENDING);
         order = orderRepository.save(order);
@@ -153,6 +156,24 @@ public class OrderService implements IOrderService {
         orderRepository.save(order);
     }
 
+    @Override
+    public OrderDTO getOrderByIdForVendor(Long orderId, Long vendorId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if order contains vendor's products
+        boolean hasVendorProducts = order.getItems().stream()
+                .anyMatch(item -> item.getProduct() != null &&
+                        item.getProduct().getVendor() != null &&
+                        item.getProduct().getVendor().getId().equals(vendorId));
+
+        if (!hasVendorProducts) {
+            throw new RuntimeException("Order does not contain vendor's products");
+        }
+
+        return convertToDTO(order);
+    }
+
     private OrderDTO convertToDTO(Order order) {
         List<OrderItemDTO> itemDTOs = orderItemRepository.findByOrder_Id(order.getId())
                 .stream()
@@ -169,7 +190,7 @@ public class OrderService implements IOrderService {
                 order.getUser().getUsername(),
                 order.getTotalAmount(),
                 order.getStatus(),
-                null, // TODO: Add createdAt field to Order entity
+                order.getOrderDate(),
                 itemDTOs,
                 paymentDTO
         );
@@ -207,5 +228,136 @@ public class OrderService implements IOrderService {
                 payment.getStatus(),
                 payment.getTransactionId()
         );
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO confirmOrderByVendor(Long orderId, Long vendorId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Kiểm tra order có items của vendor này không
+        boolean hasVendorItems = order.getItems().stream()
+                .anyMatch(item -> item.getProduct() != null &&
+                        item.getProduct().getVendor() != null &&
+                        item.getProduct().getVendor().getId().equals(vendorId));
+
+        if (!hasVendorItems) {
+            throw new RuntimeException("Order không chứa sản phẩm của vendor này");
+        }
+
+        // Chỉ chuyển từ PENDING sang SHIPPING
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Chỉ có thể xác nhận đơn hàng ở trạng thái PENDING");
+        }
+
+        order.setStatus(OrderStatus.SHIPPING);
+        order = orderRepository.save(order);
+
+        return convertToDTO(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO confirmDeliveredByUser(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Kiểm tra order thuộc về user này
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Không có quyền xác nhận đơn hàng này");
+        }
+
+        // Chỉ chuyển từ SHIPPING sang DELIVERED
+        if (order.getStatus() != OrderStatus.SHIPPING) {
+            throw new RuntimeException("Chỉ có thể xác nhận đã nhận đơn hàng ở trạng thái SHIPPING");
+        }
+
+        order.setStatus(OrderStatus.DELIVERED);
+        order = orderRepository.save(order);
+
+        // Tính và cập nhật revenue cho các vendors trong order này
+        updateVendorRevenue(order);
+
+        return convertToDTO(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderDTO cancelOrderByUser(Long orderId, Long userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        // Check if order belongs to user
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền hủy đơn hàng này");
+        }
+
+        // Chỉ cho phép hủy nếu đơn hàng đang ở trạng thái PENDING
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new RuntimeException("Chỉ có thể hủy đơn hàng khi đơn hàng đang ở trạng thái Chờ xử lý");
+        }
+
+        // Cập nhật trạng thái đơn hàng thành CANCELLED
+        order.setStatus(OrderStatus.CANCELLED);
+        order = orderRepository.save(order);
+
+        return convertToDTO(order);
+    }
+
+    private void updateVendorRevenue(Order order) {
+        // Tính tổng tiền của order (không phải từ items riêng lẻ)
+        Double orderTotalAmount = order.getTotalAmount();
+        if (orderTotalAmount == null) {
+            orderTotalAmount = 0.0;
+        }
+
+        // Group items by vendor để xác định vendor nào có trong order này
+        Map<Vendor, Double> vendorItemsAmounts = order.getItems().stream()
+                .filter(item -> item.getProduct() != null && item.getProduct().getVendor() != null)
+                .collect(Collectors.groupingBy(
+                        item -> item.getProduct().getVendor(),
+                        Collectors.summingDouble(item -> item.getPrice() * item.getQuantity())
+                ));
+
+        // Nếu order chỉ có items của 1 vendor, thì vendor đó nhận toàn bộ order totalAmount
+        // Nếu order có items của nhiều vendors, mỗi vendor nhận phần tương ứng với items của họ
+        if (vendorItemsAmounts.size() == 1) {
+            // Chỉ có 1 vendor - nhận toàn bộ order totalAmount
+            Vendor vendor = vendorItemsAmounts.keySet().iterator().next();
+            updateVendorRevenueAmount(vendor.getId(), orderTotalAmount);
+        } else {
+            // Có nhiều vendors - tính tỷ lệ và phân bổ theo tỷ lệ items
+            Double totalItemsAmount = vendorItemsAmounts.values().stream()
+                    .mapToDouble(Double::doubleValue)
+                    .sum();
+            
+            if (totalItemsAmount > 0) {
+                for (Map.Entry<Vendor, Double> entry : vendorItemsAmounts.entrySet()) {
+                    Vendor vendor = entry.getKey();
+                    Double itemsAmount = entry.getValue();
+                    // Tính phần doanh thu của vendor này dựa trên tỷ lệ
+                    Double vendorRevenueAmount = (itemsAmount / totalItemsAmount) * orderTotalAmount;
+                    updateVendorRevenueAmount(vendor.getId(), vendorRevenueAmount);
+                }
+            }
+        }
+    }
+
+    private void updateVendorRevenueAmount(Long vendorId, Double amount) {
+        VendorRevenue revenue = vendorRevenueRepository.findByVendor_Id(vendorId);
+        
+        if (revenue == null) {
+            // Tạo mới
+            revenue = new VendorRevenue();
+            revenue.setVendor(vendorRepository.findById(vendorId).orElseThrow());
+            revenue.setAmount(amount);
+            revenue.setCreatedAt(LocalDateTime.now());
+        } else {
+            // Cập nhật
+            revenue.setAmount((revenue.getAmount() != null ? revenue.getAmount() : 0.0) + amount);
+        }
+
+        vendorRevenueRepository.save(revenue);
     }
 }

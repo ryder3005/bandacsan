@@ -3,6 +3,7 @@ package vn.edu.hcmute.springboot3_4_12.controller.admin;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import vn.edu.hcmute.springboot3_4_12.dto.UserRequestDTO;
@@ -24,7 +25,7 @@ public class AdminUserPageController {
     }
 
     @PostMapping("/create")
-    public String createSubmit(HttpServletRequest request, Model model) {
+    public String createSubmit(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         try {
             String username = request.getParameter("username");
             String password = request.getParameter("password");
@@ -38,7 +39,7 @@ public class AdminUserPageController {
             dto.setRole(role != null ? role : "CUSTOMER");
 
             userService.register(dto);
-            model.addAttribute("success", "Tạo người dùng thành công");
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo người dùng thành công!");
             return "redirect:/admin/users";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -58,7 +59,7 @@ public class AdminUserPageController {
     }
 
     @PostMapping("/save")
-    public String saveUser(HttpServletRequest request, Model model) {
+    public String saveUser(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             Long id = idStr != null && !idStr.isEmpty() ? Long.parseLong(idStr) : null;
@@ -80,23 +81,27 @@ public class AdminUserPageController {
 
             if (id != null) {
                 userService.update(id, dto);
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật người dùng thành công!");
             }
             return "redirect:/admin/users";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "admin/users/edit";
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/users";
         }
     }
 
     @PostMapping("/delete")
-    public String deleteUser(HttpServletRequest request) {
+    public String deleteUser(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         String username = request.getParameter("username");
         try {
             UserResponseDTO dto = userService.findByUsername(username);
             if (dto != null && dto.id() != null) {
                 userService.deleteUser(dto.id());
+                redirectAttributes.addFlashAttribute("successMessage", "Xóa người dùng thành công!");
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa người dùng: " + e.getMessage());
         }
         return "redirect:/admin/users";
     }

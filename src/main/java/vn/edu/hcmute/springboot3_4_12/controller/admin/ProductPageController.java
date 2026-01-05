@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -70,7 +71,7 @@ public class ProductPageController {
     }
 
     @PostMapping("/create")
-    public String createProduct(HttpServletRequest request, Model model) {
+    public String createProduct(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         try {
             String nameVi = request.getParameter("nameVi");
             String nameEn = request.getParameter("nameEn");
@@ -107,8 +108,9 @@ public class ProductPageController {
 
             // Tạo sản phẩm (không có file upload trong form đơn giản này)
             productService.create(dto, null);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo sản phẩm thành công!");
 
-            return "redirect:/admin/products?success=Sản phẩm đã được tạo thành công";
+            return "redirect:/admin/products";
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage());
@@ -119,7 +121,7 @@ public class ProductPageController {
     }
 
     @PostMapping("/save")
-    public String saveProduct(HttpServletRequest request, Model model) {
+    public String saveProduct(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             String nameVi = request.getParameter("nameVi");
@@ -140,7 +142,7 @@ public class ProductPageController {
             }
 
             if (idStr == null || idStr.trim().isEmpty()) {
-                model.addAttribute("error", "ID sản phẩm không được để trống");
+                redirectAttributes.addFlashAttribute("errorMessage", "ID sản phẩm không được để trống");
                 return "redirect:/admin/products";
             }
 
@@ -161,30 +163,35 @@ public class ProductPageController {
             }
 
             productService.update(Long.parseLong(idStr), dto);
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sản phẩm thành công!");
 
-            return "redirect:/admin/products/" + idStr + "/edit?success=Sản phẩm đã được cập nhật thành công";
+            return "redirect:/admin/products";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/admin/products?error=Có lỗi xảy ra khi cập nhật sản phẩm: " + e.getMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật sản phẩm: " + e.getMessage());
+            return "redirect:/admin/products";
         }
     }
 
     // Xóa sản phẩm
     @PostMapping("/delete")
-    public String deleteProduct(HttpServletRequest request) {
+    public String deleteProduct(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             if (idStr == null || idStr.trim().isEmpty()) {
-                return "redirect:/admin/products?error=ID sản phẩm không hợp lệ";
+                redirectAttributes.addFlashAttribute("errorMessage", "ID sản phẩm không hợp lệ");
+                return "redirect:/admin/products";
             }
 
             Long id = Long.parseLong(idStr);
             productService.delete(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa sản phẩm thành công!");
 
-            return "redirect:/admin/products?success=Sản phẩm đã được xóa thành công";
+            return "redirect:/admin/products";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/admin/products?error=Có lỗi xảy ra khi xóa sản phẩm: " + e.getMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi xóa sản phẩm: " + e.getMessage());
+            return "redirect:/admin/products";
         }
     }
 }

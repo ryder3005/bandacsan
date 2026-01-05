@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import vn.edu.hcmute.springboot3_4_12.dto.CategoryRequestDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.CategoryResponseDTO;
@@ -24,7 +25,7 @@ public class AdminCategoryPageController {
     }
 
     @PostMapping("/create")
-    public String createSubmit(HttpServletRequest request, Model model) {
+    public String createSubmit(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         try {
             String nameVi = request.getParameter("nameVi");
             String nameEn = request.getParameter("nameEn");
@@ -34,10 +35,12 @@ public class AdminCategoryPageController {
             dto.setNameEn(nameEn);
 
             categoryService.create(dto);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo danh mục thành công!");
             return "redirect:/admin/categories";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "admin/category/create";
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/admin/categories";
         }
     }
 
@@ -59,7 +62,7 @@ public class AdminCategoryPageController {
     }
 
     @PostMapping("/save")
-    public String saveCategory(HttpServletRequest request) {
+    public String saveCategory(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             Long id = idStr != null && !idStr.isEmpty() ? Long.parseLong(idStr) : null;
@@ -72,20 +75,24 @@ public class AdminCategoryPageController {
 
             if (id != null) {
                 categoryService.update(id, dto);
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật danh mục thành công!");
             }
             return "redirect:/admin/categories";
         } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/admin/categories";
         }
     }
 
     @PostMapping("/delete")
-    public String deleteCategory(HttpServletRequest request) {
+    public String deleteCategory(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         String idStr = request.getParameter("id");
         try {
             Long id = Long.parseLong(idStr);
             categoryService.delete(id);
-        } catch (Exception ignored) {
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa danh mục thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa danh mục: " + e.getMessage());
         }
         return "redirect:/admin/categories";
     }

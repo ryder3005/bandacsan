@@ -1,5 +1,6 @@
 package vn.edu.hcmute.springboot3_4_12.controller.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -42,6 +43,8 @@ public class UserProfileController {
             @RequestParam(required = false) String password,
             @RequestParam(required = false) String confirmPassword,
             @RequestParam String role,
+            @RequestParam(required = false) String redirectUrl,
+            HttpServletRequest request,
             HttpSession session,
             RedirectAttributes redirectAttributes) {
         
@@ -58,19 +61,22 @@ public class UserProfileController {
             // Đảm bảo user chỉ có thể sửa thông tin của chính mình
             if (!currentUser.getId().equals(id)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền sửa thông tin của người khác");
-                return "redirect:/profile";
+                String referer = request.getHeader("Referer");
+                return (referer != null && !referer.isEmpty()) ? "redirect:" + referer : "redirect:/profile";
             }
             
             // Kiểm tra password nếu có
             if (password != null && !password.trim().isEmpty()) {
                 if (password.length() < 6) {
                     redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu phải có ít nhất 6 ký tự");
-                    return "redirect:/profile";
+                    String referer = request.getHeader("Referer");
+                    return (referer != null && !referer.isEmpty()) ? "redirect:" + referer : "redirect:/profile";
                 }
                 
                 if (!password.equals(confirmPassword)) {
                     redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu xác nhận không khớp");
-                    return "redirect:/profile";
+                    String referer = request.getHeader("Referer");
+                    return (referer != null && !referer.isEmpty()) ? "redirect:" + referer : "redirect:/profile";
                 }
             }
             
@@ -105,6 +111,11 @@ public class UserProfileController {
             redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
         }
         
+        // Redirect về trang trước đó hoặc trang profile
+        String referer = redirectUrl != null && !redirectUrl.isEmpty() ? redirectUrl : request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty() && !referer.contains("/profile/update")) {
+            return "redirect:" + referer;
+        }
         return "redirect:/profile";
     }
 }

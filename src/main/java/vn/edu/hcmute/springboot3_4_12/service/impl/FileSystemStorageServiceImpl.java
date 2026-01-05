@@ -21,7 +21,16 @@ public class FileSystemStorageServiceImpl implements IStorageService {
     private final Path rootLocation;
 
     public FileSystemStorageServiceImpl(StorageProperties properties) {
-        this.rootLocation = Paths.get(properties.getLocation());
+        // Lưu trong thư mục project (relative path từ project root)
+        String location = properties.getLocation();
+        if (location != null && !location.isEmpty() && !Paths.get(location).isAbsolute()) {
+            // Nếu là relative path, tạo trong project root
+            String projectRoot = System.getProperty("user.dir");
+            this.rootLocation = Paths.get(projectRoot, location);
+        } else {
+            // Nếu là absolute path, dùng như cũ
+            this.rootLocation = Paths.get(location != null ? location : "upload");
+        }
     }
 
     @Override
@@ -36,13 +45,28 @@ public class FileSystemStorageServiceImpl implements IStorageService {
 
     @Override
     public void delete(String storeFilename) throws Exception {
+        // Xóa từ thư mục products
+        Path productsFile = rootLocation.resolve("products").resolve(Paths.get(storeFilename)).normalize().toAbsolutePath();
+        if (Files.exists(productsFile)) {
+            Files.delete(productsFile);
+            return;
+        }
+        // Nếu không tìm thấy, thử xóa từ root (backward compatibility)
         Path destinationFile =
                 rootLocation.resolve(Paths.get(storeFilename)).normalize().toAbsolutePath();
-        Files.delete(destinationFile);
+        if (Files.exists(destinationFile)) {
+            Files.delete(destinationFile);
+        }
     }
 
     @Override
     public Path load(String filename) {
+        // Tìm trong thư mục products trước
+        Path productsFile = rootLocation.resolve("products").resolve(filename);
+        if (Files.exists(productsFile)) {
+            return productsFile;
+        }
+        // Nếu không tìm thấy, trả về file ở root (backward compatibility)
         return rootLocation.resolve(filename);
     }
 
@@ -67,14 +91,21 @@ public class FileSystemStorageServiceImpl implements IStorageService {
             if(file.isEmpty()) {
                 throw new StorageException("Failed to store empty file");
             }
-            // Resolve path and ensure it's absolute and normalized
+            
+            // Tạo thư mục products nếu chưa có
+            Path productsDir = this.rootLocation.resolve("products");
+            if (!Files.exists(productsDir)) {
+                Files.createDirectories(productsDir);
+            }
+            
+            // Resolve path và lưu vào thư mục products
             Path destinationFile =
-                    this.rootLocation.resolve(Paths.get(storeFilename))
-                            .normalize().toAbsolutePath(); // Lấy đường dẫn tuyệt đối
+                    productsDir.resolve(Paths.get(storeFilename))
+                            .normalize().toAbsolutePath();
 
-            // Security check: Prevent "path traversal" by ensuring the destination is within the root location
-            if(!destinationFile.getParent().equals(this.rootLocation.toAbsolutePath())) {
-                throw new StorageException("Cannot store file outside current directory");
+            // Security check: Prevent "path traversal" by ensuring the destination is within the products directory
+            if(!destinationFile.getParent().equals(productsDir.toAbsolutePath())) {
+                throw new StorageException("Cannot store file outside products directory");
             }
 
             try (InputStream inputStream = file.getInputStream()) {

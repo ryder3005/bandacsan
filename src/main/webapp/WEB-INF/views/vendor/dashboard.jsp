@@ -231,8 +231,8 @@
                                         <i class="fas fa-shopping-cart"></i>
                                     </div>
                                     <div class="stats-number">${totalOrders != null ? totalOrders : 0}</div>
-                                    <h6 class="card-title mb-0">Đơn hàng</h6>
-                                    <small class="opacity-75">Tháng này</small>
+                                    <h6 class="card-title mb-0">Tổng đơn hàng</h6>
+                                    <small class="opacity-75">Tất cả đơn hàng</small>
                                 </div>
                             </div>
                         </div>
@@ -243,10 +243,10 @@
                                         <i class="fas fa-dollar-sign"></i>
                                     </div>
                                     <div class="stats-number">
-                                        <fmt:formatNumber value="${monthlyRevenue != null ? monthlyRevenue : 0}"
+                                        <fmt:formatNumber value="${totalRevenue != null ? totalRevenue : 0}"
                                             pattern="#,##0" />
                                     </div>
-                                    <h6 class="card-title mb-0">Doanh thu</h6>
+                                    <h6 class="card-title mb-0">Tổng doanh thu</h6>
                                     <small class="opacity-75">VNĐ</small>
                                 </div>
                             </div>

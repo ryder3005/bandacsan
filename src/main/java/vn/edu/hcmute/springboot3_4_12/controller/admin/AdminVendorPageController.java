@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import vn.edu.hcmute.springboot3_4_12.dto.VendorRequestDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.VendorResponseDTO;
@@ -28,7 +29,7 @@ public class AdminVendorPageController {
     }
 
     @PostMapping("/create")
-    public String createSubmit(HttpServletRequest request, Model model) {
+    public String createSubmit(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
         try {
             String userIdStr = request.getParameter("userId");
             String storeName = request.getParameter("storeName");
@@ -46,6 +47,7 @@ public class AdminVendorPageController {
             dto.setPhone(phone);
 
             vendorService.create(dto);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo nhà bán hàng thành công!");
             return "redirect:/admin/vendors";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -72,7 +74,7 @@ public class AdminVendorPageController {
     }
 
     @PostMapping("/save")
-    public String saveVendor(HttpServletRequest request) {
+    public String saveVendor(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             Long id = idStr != null && !idStr.isEmpty() ? Long.parseLong(idStr) : null;
@@ -93,25 +95,27 @@ public class AdminVendorPageController {
 
             if (id != null) {
                 vendorService.update(id, dto);
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật nhà bán hàng thành công!");
             }
             return "redirect:/admin/vendors";
         } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/admin/vendors";
         }
     }
 
     @PostMapping("/delete")
-    public String deleteVendor(HttpServletRequest request, Model model) {
+    public String deleteVendor(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             if (idStr != null && !idStr.isEmpty()) {
                 Long id = Long.parseLong(idStr);
                 vendorService.delete(id);
-                model.addAttribute("success", "Xóa nhà bán hàng thành công");
+                redirectAttributes.addFlashAttribute("successMessage", "Xóa nhà bán hàng thành công!");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Không thể xóa nhà bán hàng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa nhà bán hàng: " + e.getMessage());
         }
         return "redirect:/admin/vendors";
     }

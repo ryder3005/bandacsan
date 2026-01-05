@@ -122,7 +122,7 @@ public class BlogController {
 
         // Validate user ID
         if (user.getId() == null) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi: Không thể xác định người dùng");
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Không thể xác định người dùng");
             return "redirect:/login";
         }
 
@@ -130,16 +130,16 @@ public class BlogController {
             if (blogRequest.getId() != null) {
                 // Update existing blog
                 blogService.updateBlog(blogRequest.getId(), blogRequest, user.getId());
-                redirectAttributes.addFlashAttribute("success", "Bài viết đã được cập nhật thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật bài viết thành công!");
             } else {
                 // Create new blog
                 blogService.createBlog(blogRequest, user.getId());
-                redirectAttributes.addFlashAttribute("success", "Bài viết đã được tạo thành công!");
+                redirectAttributes.addFlashAttribute("successMessage", "Tạo bài viết thành công!");
             }
         } catch (Exception e) {
             // Log the full exception for debugging
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
             return "redirect:/user/blogs/create";
         }
 
@@ -157,16 +157,16 @@ public class BlogController {
 
         // Validate user ID
         if (user.getId() == null) {
-            redirectAttributes.addFlashAttribute("error", "Lỗi: Không thể xác định người dùng");
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: Không thể xác định người dùng");
             return "redirect:/login";
         }
 
         try {
             blogService.deleteBlog(id, user.getId());
-            redirectAttributes.addFlashAttribute("success", "Bài viết đã được xóa thành công!");
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa bài viết thành công!");
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi: " + e.getMessage());
         }
 
         return "redirect:/user/blogs";

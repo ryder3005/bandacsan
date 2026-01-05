@@ -165,6 +165,8 @@
 </head>
 <body>
 <jsp:include page="/WEB-INF/common/header.jsp" />
+<jsp:include page="/WEB-INF/common/Toast.jsp" />
+<jsp:include page="/WEB-INF/common/toast-handler.jsp" />
 
 <!-- Orders Header -->
 <section class="orders-header">
@@ -184,15 +186,15 @@
 
 <div class="container">
     <!-- Alert Messages -->
-    <c:if test="${not empty success}">
+    <c:if test="${not empty successMessage}">
         <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
-            <i class="fas fa-check-circle me-2"></i>${success}
+            <i class="fas fa-check-circle me-2"></i>${successMessage}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
-    <c:if test="${not empty error}">
+    <c:if test="${not empty errorMessage}">
         <div class="alert alert-danger alert-dismissible fade show animate__animated animate__shakeX" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i>${error}
+            <i class="fas fa-exclamation-triangle me-2"></i>${errorMessage}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
@@ -202,9 +204,9 @@
         <div class="d-flex justify-content-center">
             <button class="filter-tab active" onclick="filterOrders('all')">Tất cả</button>
             <button class="filter-tab" onclick="filterOrders('PENDING')">Chờ xử lý</button>
-            <button class="filter-tab" onclick="filterOrders('PROCESSING')">Đang xử lý</button>
             <button class="filter-tab" onclick="filterOrders('SHIPPING')">Đang giao</button>
             <button class="filter-tab" onclick="filterOrders('DELIVERED')">Đã giao</button>
+            <button class="filter-tab" onclick="filterOrders('CANCELLED')">Đã hủy</button>
         </div>
     </div>
 
@@ -225,6 +227,20 @@
                                     <a href="<c:url value='/user/orders/${order.id}'/>" class="btn btn-view-detail btn-sm">
                                         <i class="fas fa-eye me-1"></i>Xem chi tiết
                                     </a>
+                                    <c:if test="${order.status == 'PENDING'}">
+                                        <form method="post" action="<c:url value='/user/orders/${order.id}/cancel'/>" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #${order.id}? Đơn hàng sẽ không thể khôi phục sau khi hủy.');">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times-circle me-1"></i>Hủy đơn hàng
+                                            </button>
+                                        </form>
+                                    </c:if>
+                                    <c:if test="${order.status == 'SHIPPING'}">
+                                        <form method="post" action="<c:url value='/user/orders/${order.id}/confirm-delivered'/>" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn đã nhận được hàng? Đơn hàng sẽ chuyển sang trạng thái đã giao.');">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check-circle me-1"></i>Xác nhận đã nhận hàng
+                                            </button>
+                                        </form>
+                                    </c:if>
                                     <c:if test="${order.status == 'DELIVERED'}">
                                         <button class="btn btn-warning btn-sm" onclick="openReviewModal(${order.id})">
                                             <i class="fas fa-star me-1"></i>Đánh giá

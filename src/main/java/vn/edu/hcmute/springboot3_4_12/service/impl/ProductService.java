@@ -9,6 +9,7 @@ import vn.edu.hcmute.springboot3_4_12.entity.Product;
 import vn.edu.hcmute.springboot3_4_12.entity.Vendor;
 import vn.edu.hcmute.springboot3_4_12.mapper.ProductMapper;
 import vn.edu.hcmute.springboot3_4_12.repository.CategoryRepository;
+import vn.edu.hcmute.springboot3_4_12.repository.ImageRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.VendorRepository;
 import vn.edu.hcmute.springboot3_4_12.service.IProductService;
@@ -33,6 +34,8 @@ public class ProductService implements IProductService {
     private VendorRepository vendorRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private ImageRepository imageRepository;
     @Autowired
     private IStorageService storageService;
     @Autowired
@@ -104,7 +107,7 @@ public class ProductService implements IProductService {
 
     @Transactional
     @Override
-    public ProductResponseDTO update(Long id, ProductRequestDTO dto) {
+    public ProductResponseDTO update(Long id, ProductRequestDTO dto, List<MultipartFile> files) {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại id = " + id));
 
@@ -121,6 +124,37 @@ public class ProductService implements IProductService {
 
         existingProduct.setVendor(vendor);
         existingProduct.setCategories(categories);
+
+        // Xử lý upload hình ảnh mới (nếu có)
+        if (files != null && !files.isEmpty()) {
+            // Lưu danh sách ảnh cũ để xóa file trên disk
+            List<Image> oldImages = new ArrayList<>(existingProduct.getImages());
+            
+            // Xóa file trên disk trước
+            for (Image oldImage : oldImages) {
+                try {
+                    storageService.delete(oldImage.getUrl());
+                } catch (Exception e) {
+                    System.err.println("Không thể xóa ảnh cũ: " + oldImage.getUrl());
+                }
+            }
+            
+            // Clear collection - với orphanRemoval = true, Hibernate sẽ tự động xóa records trong DB
+            existingProduct.getImages().clear();
+            
+            // Thêm ảnh mới vào collection hiện có (KHÔNG set một collection mới)
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    String filename = storageService.getSorageFilename(file, UUID.randomUUID().toString());
+                    storageService.store(file, filename);
+
+                    Image image = new Image();
+                    image.setUrl(filename);
+                    image.setProduct(existingProduct);
+                    existingProduct.getImages().add(image);
+                }
+            }
+        }
 
         Product updatedProduct = productRepository.save(existingProduct);
         return convertToResponseDTO(updatedProduct);

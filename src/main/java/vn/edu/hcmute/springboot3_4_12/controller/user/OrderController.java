@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import vn.edu.hcmute.springboot3_4_12.dto.OrderDTO;
@@ -66,5 +67,74 @@ public class OrderController {
 
         OrderDTO order = orderService.getOrderById(orderId, user.getId());
         return order.getItems();
+    }
+
+    @PostMapping("/{orderId}/confirm-delivered")
+    public String confirmDelivered(@PathVariable Long orderId, HttpSession session, 
+                                   org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            orderService.confirmDeliveredByUser(orderId, user.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Xác nhận đã nhận hàng thành công!");
+            return "redirect:/user/orders";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xác nhận: " + e.getMessage());
+            return "redirect:/user/orders";
+        }
+    }
+
+    @PostMapping("/{orderId}/cancel")
+    public String cancelOrder(@PathVariable Long orderId, HttpSession session,
+                             org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            orderService.cancelOrderByUser(orderId, user.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Hủy đơn hàng thành công!");
+            return "redirect:/user/orders";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy đơn hàng: " + e.getMessage());
+            return "redirect:/user/orders";
+        }
+    }
+
+    @GetMapping("/status/summary")
+    @ResponseBody
+    public java.util.Map<String, Object> getOrderStatusSummary(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return java.util.Map.of("error", "User not authenticated");
+        }
+
+        try {
+            List<OrderDTO> orders = orderService.getUserOrders(user.getId());
+            
+            // Đếm số lượng đơn hàng theo trạng thái
+            long pending = orders.stream().filter(o -> o.getStatus() == vn.edu.hcmute.springboot3_4_12.entity.OrderStatus.PENDING).count();
+            long processing = orders.stream().filter(o -> o.getStatus() == vn.edu.hcmute.springboot3_4_12.entity.OrderStatus.PROCESSING).count();
+            long shipping = orders.stream().filter(o -> o.getStatus() == vn.edu.hcmute.springboot3_4_12.entity.OrderStatus.SHIPPING).count();
+            long delivered = orders.stream().filter(o -> o.getStatus() == vn.edu.hcmute.springboot3_4_12.entity.OrderStatus.DELIVERED).count();
+            long cancelled = orders.stream().filter(o -> o.getStatus() == vn.edu.hcmute.springboot3_4_12.entity.OrderStatus.CANCELLED).count();
+            
+            return java.util.Map.of(
+                "total", orders.size(),
+                "pending", pending,
+                "processing", processing,
+                "shipping", shipping,
+                "delivered", delivered,
+                "cancelled", cancelled
+            );
+        } catch (Exception e) {
+            return java.util.Map.of("error", e.getMessage());
+        }
     }
 }

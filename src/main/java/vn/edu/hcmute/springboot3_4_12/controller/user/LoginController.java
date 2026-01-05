@@ -82,7 +82,8 @@ public class LoginController {
                                   @RequestParam String password,
                                   @RequestParam String email,
                                   @RequestParam(required = false) String phone,
-                                  HttpServletRequest request) {
+                                  HttpServletRequest request,
+                                  org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
         try {
             // Tạo DTO từ form data
             UserRequestDTO dto = new UserRequestDTO();
@@ -95,7 +96,8 @@ public class LoginController {
             userService.register(dto);
             
             // Đăng ký thành công, redirect về login
-            return "redirect:/login?success=Đăng ký thành công! Vui lòng đăng nhập.";
+            redirectAttributes.addFlashAttribute("successMessage", "Đăng ký thành công! Vui lòng đăng nhập.");
+            return "redirect:/login";
         } catch (Exception e) {
             // Nếu có lỗi (ví dụ: username đã tồn tại)
             request.setAttribute("message", e.getMessage() != null ? e.getMessage() : "Có lỗi xảy ra khi đăng ký");

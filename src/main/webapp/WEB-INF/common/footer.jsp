@@ -35,10 +35,10 @@
             <div class="col-md-3 mb-4">
                 <h6 class="mb-3 text-white">Liên hệ</h6>
                 <ul class="list-unstyled text-white-50"> <li class="mb-2">
-                    <i class="bi bi-envelope text-primary"></i> Email: info@dacsanquehuong.com
+                    <i class="bi bi-envelope text-primary"></i> Email: 23110101@student.hcmute.edu.vn
                 </li>
                     <li class="mb-2">
-                        <i class="bi bi-telephone text-success"></i> Hotline: 1900-xxxx
+                        <i class="bi bi-telephone text-success"></i> Hotline: 0899956690
                     </li>
                     <li class="mb-2">
                         <i class="bi bi-geo-alt text-danger"></i> Địa chỉ: Việt Nam

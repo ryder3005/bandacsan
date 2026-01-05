@@ -11,8 +11,24 @@
 </head>
 <body>
 <jsp:include page="/WEB-INF/common/header.jsp" />
+<jsp:include page="/WEB-INF/common/Toast.jsp" />
+<jsp:include page="/WEB-INF/common/toast-handler.jsp" />
 <div class="container-fluid mt-4">
     <h1 class="mb-4"><i class="bi bi-building"></i> Quản lý Shop</h1>
+    
+    <!-- Alert Messages -->
+    <c:if test="${not empty successMessage}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>${successMessage}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
+    <c:if test="${not empty errorMessage}">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>${errorMessage}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
     
     <div class="row">
         <div class="col-md-8">

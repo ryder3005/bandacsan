@@ -8,12 +8,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import vn.edu.hcmute.springboot3_4_12.service.IProductService;
 import vn.edu.hcmute.springboot3_4_12.service.ICategoryService;
+import vn.edu.hcmute.springboot3_4_12.service.IOrderService;
 import vn.edu.hcmute.springboot3_4_12.service.impl.VendorService;
 import vn.edu.hcmute.springboot3_4_12.repository.VendorRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
+import vn.edu.hcmute.springboot3_4_12.repository.VendorRevenueRepository;
+import vn.edu.hcmute.springboot3_4_12.entity.OrderStatus;
 import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmute.springboot3_4_12.entity.User;
 import vn.edu.hcmute.springboot3_4_12.dto.ProductRequestDTO;
@@ -29,6 +33,8 @@ public class VendorContentController {
     private final VendorRepository vendorRepository;
     private final ProductRepository productRepository;
     private final vn.edu.hcmute.springboot3_4_12.repository.OrderRepository orderRepository;
+    private final IOrderService orderService;
+    private final VendorRevenueRepository vendorRevenueRepository;
 
     @GetMapping("/products")
     public String products(Model model, HttpSession session) {
@@ -73,14 +79,39 @@ public class VendorContentController {
 
                 // Get all orders that contain products from this vendor
                 var allOrders = orderRepository.findAll();
-                var vendorOrders = allOrders.stream()
+                var vendorOrdersEntities = allOrders.stream()
                         .filter(order -> order.getItems() != null && order.getItems().stream()
                                 .anyMatch(item -> item.getProduct() != null &&
                                         item.getProduct().getVendor() != null &&
                                         item.getProduct().getVendor().getId().equals(vendor.getId())))
                         .collect(java.util.stream.Collectors.toList());
 
+                // Convert to DTOs
+                var vendorOrders = vendorOrdersEntities.stream()
+                        .map(order -> orderService.getOrderByIdForVendor(order.getId(), vendor.getId()))
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Calculate statistics
+                long totalOrders = vendorOrders.size();
+                long deliveredCount = vendorOrders.stream()
+                        .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
+                        .count();
+                long pendingCount = vendorOrders.stream()
+                        .filter(order -> order.getStatus() == OrderStatus.PENDING)
+                        .count();
+                
+                // Calculate total revenue từ tổng tiền các đơn hàng đã giao
+                // Nếu order có items của vendor này, thì tính toàn bộ totalAmount của order
+                double totalRevenue = vendorOrdersEntities.stream()
+                        .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
+                        .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                        .sum();
+
                 model.addAttribute("orders", vendorOrders);
+                model.addAttribute("totalOrders", totalOrders);
+                model.addAttribute("deliveredCount", deliveredCount);
+                model.addAttribute("pendingCount", pendingCount);
+                model.addAttribute("totalRevenue", totalRevenue);
             } else {
                 model.addAttribute("orders", new java.util.ArrayList<>());
             }
@@ -108,7 +139,130 @@ public class VendorContentController {
     }
 
     @GetMapping("/revenue")
-    public String revenue(Model model) {
+    public String revenue(Model model, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
+        if (!vendorOpt.isPresent()) {
+            return "redirect:/vendor/dashboard";
+        }
+
+        var vendor = vendorOpt.get();
+
+        // Get all vendor orders (DELIVERED)
+        var allOrders = orderRepository.findAll();
+        var vendorOrdersEntities = allOrders.stream()
+                .filter(order -> order.getItems() != null && order.getItems().stream()
+                        .anyMatch(item -> item.getProduct() != null &&
+                                item.getProduct().getVendor() != null &&
+                                item.getProduct().getVendor().getId().equals(vendor.getId())))
+                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
+                .collect(java.util.stream.Collectors.toList());
+
+        // Calculate total revenue từ tổng tiền các đơn hàng đã giao
+        // Nếu order có items của vendor này, thì tính toàn bộ totalAmount của order
+        double totalRevenue = vendorOrdersEntities.stream()
+                .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                .sum();
+
+        // Get vendor revenue for createdAt date
+        var vendorRevenue = vendorRevenueRepository.findByVendor_Id(vendor.getId());
+        String revenueCreatedAtStr = null;
+        if (vendorRevenue != null && vendorRevenue.getCreatedAt() != null) {
+            revenueCreatedAtStr = vendorRevenue.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        }
+
+        // Calculate monthly revenue
+        java.time.YearMonth currentMonth = java.time.YearMonth.now();
+        java.time.LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
+        java.time.LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+
+        double monthlyRevenue = vendorOrdersEntities.stream()
+                .filter(order -> order.getOrderDate() != null &&
+                        (order.getOrderDate().isEqual(startOfMonth) || order.getOrderDate().isAfter(startOfMonth)) &&
+                        (order.getOrderDate().isEqual(endOfMonth) || order.getOrderDate().isBefore(endOfMonth)))
+                .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                .sum();
+
+        // Calculate weekly revenue
+        java.time.LocalDateTime startOfWeek = java.time.LocalDateTime.now()
+                .with(java.time.DayOfWeek.MONDAY)
+                .withHour(0).withMinute(0).withSecond(0);
+        java.time.LocalDateTime endOfWeek = startOfWeek.plusDays(6).withHour(23).withMinute(59).withSecond(59);
+
+        double weeklyRevenue = vendorOrdersEntities.stream()
+                .filter(order -> order.getOrderDate() != null &&
+                        (order.getOrderDate().isEqual(startOfWeek) || order.getOrderDate().isAfter(startOfWeek)) &&
+                        (order.getOrderDate().isEqual(endOfWeek) || order.getOrderDate().isBefore(endOfWeek)))
+                .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                .sum();
+
+        long totalDeliveredOrders = vendorOrdersEntities.size();
+
+        // Tính doanh thu theo từng tháng (12 tháng gần nhất) cho biểu đồ
+        java.util.Map<String, Double> monthlyRevenueData = new java.util.LinkedHashMap<>();
+        for (int i = 11; i >= 0; i--) {
+            java.time.YearMonth month = java.time.YearMonth.now().minusMonths(i);
+            java.time.LocalDateTime monthStart = month.atDay(1).atStartOfDay();
+            java.time.LocalDateTime monthEnd = month.atEndOfMonth().atTime(23, 59, 59);
+            
+            double monthRevenue = vendorOrdersEntities.stream()
+                    .filter(order -> order.getOrderDate() != null &&
+                            (order.getOrderDate().isEqual(monthStart) || order.getOrderDate().isAfter(monthStart)) &&
+                            (order.getOrderDate().isEqual(monthEnd) || order.getOrderDate().isBefore(monthEnd)))
+                    .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                    .sum();
+            
+            monthlyRevenueData.put(month.format(java.time.format.DateTimeFormatter.ofPattern("MM/yyyy")), monthRevenue);
+        }
+
+        // Tính doanh thu theo từng tuần (8 tuần gần nhất) cho biểu đồ
+        java.util.Map<String, Double> weeklyRevenueData = new java.util.LinkedHashMap<>();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        for (int i = 7; i >= 0; i--) {
+            java.time.LocalDateTime weekStart = now.minusWeeks(i)
+                    .with(java.time.DayOfWeek.MONDAY)
+                    .withHour(0).withMinute(0).withSecond(0).withNano(0);
+            java.time.LocalDateTime weekEnd = weekStart.plusDays(6).withHour(23).withMinute(59).withSecond(59).withNano(999000000);
+            
+            double weekRevenue = vendorOrdersEntities.stream()
+                    .filter(order -> order.getOrderDate() != null &&
+                            (order.getOrderDate().isEqual(weekStart) || order.getOrderDate().isAfter(weekStart)) &&
+                            (order.getOrderDate().isEqual(weekEnd) || order.getOrderDate().isBefore(weekEnd)))
+                    .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                    .sum();
+            
+            String weekLabel = "Tuần " + (8 - i) + " (" + 
+                    weekStart.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM")) + " - " +
+                    weekEnd.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM")) + ")";
+            weeklyRevenueData.put(weekLabel, weekRevenue);
+        }
+        
+        // Chuyển đổi Map sang JSON string để truyền vào JSP
+        String monthlyRevenueDataJson = "{}";
+        String weeklyRevenueDataJson = "{}";
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            monthlyRevenueDataJson = objectMapper.writeValueAsString(monthlyRevenueData);
+            weeklyRevenueDataJson = objectMapper.writeValueAsString(weeklyRevenueData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("totalRevenue", totalRevenue);
+        model.addAttribute("monthlyRevenue", monthlyRevenue);
+        model.addAttribute("weeklyRevenue", weeklyRevenue);
+        model.addAttribute("totalDeliveredOrders", totalDeliveredOrders);
+        model.addAttribute("vendorRevenue", vendorRevenue);
+        model.addAttribute("revenueCreatedAtStr", revenueCreatedAtStr);
+        model.addAttribute("monthlyRevenueData", monthlyRevenueData);
+        model.addAttribute("weeklyRevenueData", weeklyRevenueData);
+        model.addAttribute("monthlyRevenueDataJson", monthlyRevenueDataJson);
+        model.addAttribute("weeklyRevenueDataJson", weeklyRevenueDataJson);
+
         return "vendor/revenue";
     }
 
@@ -181,7 +335,7 @@ public class VendorContentController {
     }
 
     @PostMapping("/products/create")
-    public String createProduct(HttpServletRequest request, HttpSession session, Model model) {
+    public String createProduct(HttpServletRequest request, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
         try {
             // Kiểm tra quyền vendor
             User user = (User) session.getAttribute("user");
@@ -231,10 +385,11 @@ public class VendorContentController {
                         .collect(java.util.stream.Collectors.toList()));
             }
 
-            // Tạo sản phẩm (không có file upload trong form đơn giản này)
+            // Tạo sản phẩm
             productService.create(dto, null);
+            redirectAttributes.addFlashAttribute("successMessage", "Tạo sản phẩm thành công!");
 
-            return "redirect:/vendor/products?success=Sản phẩm đã được tạo thành công";
+            return "redirect:/vendor/products";
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "Có lỗi xảy ra khi tạo sản phẩm: " + e.getMessage());
@@ -244,7 +399,17 @@ public class VendorContentController {
     }
 
     @PostMapping("/products/save")
-    public String saveProduct(HttpServletRequest request, HttpSession session, Model model) {
+    public String saveProduct(
+            @org.springframework.web.bind.annotation.RequestParam(value = "id", required = false) String idStr,
+            @org.springframework.web.bind.annotation.RequestParam("nameVi") String nameVi,
+            @org.springframework.web.bind.annotation.RequestParam(value = "nameEn", required = false) String nameEn,
+            @org.springframework.web.bind.annotation.RequestParam(value = "descriptionVi", required = false) String descriptionVi,
+            @org.springframework.web.bind.annotation.RequestParam(value = "descriptionEn", required = false) String descriptionEn,
+            @org.springframework.web.bind.annotation.RequestParam(value = "price", required = false) String priceStr,
+            @org.springframework.web.bind.annotation.RequestParam(value = "stock", required = false) String stockStr,
+            @org.springframework.web.bind.annotation.RequestParam(value = "categoryIds", required = false) String[] categoryIds,
+            @org.springframework.web.bind.annotation.RequestParam(value = "files", required = false) org.springframework.web.multipart.MultipartFile[] files,
+            HttpSession session, RedirectAttributes redirectAttributes) {
         try {
             // Kiểm tra quyền vendor
             User user = (User) session.getAttribute("user");
@@ -254,19 +419,11 @@ public class VendorContentController {
 
             var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
             if (!vendorOpt.isPresent()) {
-                return "redirect:/vendor/products?error=Bạn không có quyền tạo/chỉnh sửa sản phẩm";
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền tạo/chỉnh sửa sản phẩm");
+                return "redirect:/vendor/products";
             }
 
             var vendor = vendorOpt.get();
-
-            String idStr = request.getParameter("id");
-            String nameVi = request.getParameter("nameVi");
-            String nameEn = request.getParameter("nameEn");
-            String descriptionVi = request.getParameter("descriptionVi");
-            String descriptionEn = request.getParameter("descriptionEn");
-            String priceStr = request.getParameter("price");
-            String stockStr = request.getParameter("stock");
-            String[] categoryIds = request.getParameterValues("categoryIds");
 
             // Validation cơ bản
             if (nameVi == null || nameVi.trim().isEmpty()) {
@@ -292,6 +449,20 @@ public class VendorContentController {
                         .collect(java.util.stream.Collectors.toList()));
             }
 
+            // Xử lý file upload
+            java.util.List<org.springframework.web.multipart.MultipartFile> fileList = null;
+            if (files != null && files.length > 0) {
+                fileList = new java.util.ArrayList<>();
+                for (org.springframework.web.multipart.MultipartFile file : files) {
+                    if (file != null && !file.isEmpty()) {
+                        fileList.add(file);
+                    }
+                }
+                if (fileList.isEmpty()) {
+                    fileList = null;
+                }
+            }
+
             if (idStr != null && !idStr.trim().isEmpty()) {
                 // Update existing product
                 Long id = Long.parseLong(idStr);
@@ -299,25 +470,29 @@ public class VendorContentController {
 
                 // Kiểm tra quyền sở hữu
                 if (!vendor.getId().equals(existingProduct.getVendorId())) {
-                    return "redirect:/vendor/products?error=Bạn không có quyền chỉnh sửa sản phẩm này";
+                    redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền chỉnh sửa sản phẩm này");
+                    return "redirect:/vendor/products";
                 }
 
-                productService.update(id, dto);
-                return "redirect:/vendor/products/edit/" + id + "?success=Sản phẩm đã được cập nhật thành công";
+                productService.update(id, dto, fileList);
+                redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sản phẩm thành công!");
+                return "redirect:/vendor/products";
             } else {
                 // Create new product
-                productService.create(dto, null);
-                return "redirect:/vendor/products?success=Sản phẩm đã được tạo thành công";
+                productService.create(dto, fileList);
+                redirectAttributes.addFlashAttribute("successMessage", "Tạo sản phẩm thành công!");
+                return "redirect:/vendor/products";
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/vendor/products?error=Có lỗi xảy ra: " + e.getMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/vendor/products";
         }
     }
 
     @PostMapping("/products/delete/{id}")
-    public String deleteProduct(@PathVariable Long id, HttpSession session) {
+    public String deleteProduct(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
             // Kiểm tra quyền vendor
             User user = (User) session.getAttribute("user");
@@ -327,7 +502,8 @@ public class VendorContentController {
 
             var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
             if (!vendorOpt.isPresent()) {
-                return "redirect:/vendor/products?error=Bạn không có quyền xóa sản phẩm";
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xóa sản phẩm");
+                return "redirect:/vendor/products";
             }
 
             var vendor = vendorOpt.get();
@@ -335,14 +511,85 @@ public class VendorContentController {
             // Kiểm tra sản phẩm có thuộc về vendor này không
             var productDTO = productService.findById(id);
             if (!vendor.getId().equals(productDTO.getVendorId())) {
-                return "redirect:/vendor/products?error=Bạn không có quyền xóa sản phẩm này";
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xóa sản phẩm này");
+                return "redirect:/vendor/products";
             }
 
             productService.delete(id);
-            return "redirect:/vendor/products?success=Sản phẩm đã được xóa thành công";
+            redirectAttributes.addFlashAttribute("successMessage", "Xóa sản phẩm thành công!");
+            return "redirect:/vendor/products";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/vendor/products?error=Có lỗi xảy ra khi xóa sản phẩm: " + e.getMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi xóa sản phẩm: " + e.getMessage());
+            return "redirect:/vendor/products";
+        }
+    }
+
+    @GetMapping("/orders/{orderId}")
+    public String orderDetail(@PathVariable Long orderId, HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
+            if (!vendorOpt.isPresent()) {
+                return "redirect:/vendor/orders";
+            }
+
+            var vendor = vendorOpt.get();
+            var orderOpt = orderRepository.findById(orderId);
+            
+            if (!orderOpt.isPresent()) {
+                return "redirect:/vendor/orders";
+            }
+
+            var order = orderOpt.get();
+            
+            // Check if order contains vendor's products
+            boolean hasVendorProducts = order.getItems().stream()
+                    .anyMatch(item -> item.getProduct() != null &&
+                            item.getProduct().getVendor() != null &&
+                            item.getProduct().getVendor().getId().equals(vendor.getId()));
+
+            if (!hasVendorProducts) {
+                return "redirect:/vendor/orders";
+            }
+
+            // Get order as DTO
+            var orderDTO = orderService.getOrderByIdForVendor(orderId, vendor.getId());
+            model.addAttribute("order", orderDTO);
+            return "vendor/order-detail";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/vendor/orders";
+        }
+    }
+
+    @PostMapping("/orders/{orderId}/confirm")
+    public String confirmOrder(@PathVariable Long orderId, HttpSession session, RedirectAttributes redirectAttributes) {
+        try {
+            User user = (User) session.getAttribute("user");
+            if (user == null) {
+                return "redirect:/login";
+            }
+
+            var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
+            if (!vendorOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Bạn không có quyền xác nhận đơn hàng");
+                return "redirect:/vendor/orders";
+            }
+
+            var vendor = vendorOpt.get();
+            orderService.confirmOrderByVendor(orderId, vendor.getId());
+            redirectAttributes.addFlashAttribute("successMessage", "Xác nhận đơn hàng thành công! Đơn hàng đang được giao.");
+            
+            return "redirect:/vendor/orders";
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể xác nhận đơn hàng: " + e.getMessage());
+            return "redirect:/vendor/orders";
         }
     }
 
@@ -362,7 +609,7 @@ public class VendorContentController {
     }
 
     @PostMapping("/shop/update")
-    public String updateShop(HttpServletRequest request, HttpSession session, Model model) {
+    public String updateShop(HttpServletRequest request, HttpSession session, RedirectAttributes redirectAttributes) {
         try {
             User user = (User) session.getAttribute("user");
             if (user == null) {
@@ -371,7 +618,8 @@ public class VendorContentController {
 
             var vendorOpt = vendorRepository.findVendorByUser_Id(user.getId());
             if (!vendorOpt.isPresent()) {
-                return "redirect:/vendor/shop?error=Shop not found";
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy shop");
+                return "redirect:/vendor/shop";
             }
             var vendor = vendorOpt.get();
 
@@ -391,10 +639,12 @@ public class VendorContentController {
 
             vendorService.update(vendor.getId(), dto);
 
-            return "redirect:/vendor/shop?success=Cập nhật thông tin shop thành công";
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin shop thành công!");
+            return "redirect:/vendor/shop";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/vendor/shop/update?error=" + e.getMessage();
+            redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/vendor/shop";
         }
     }
 }

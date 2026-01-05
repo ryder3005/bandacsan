@@ -12,6 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="<c:url value='/resources/css/site.css'/>"/>
     <style>
         /* Page Transition Effects */
         .page-transition {
@@ -469,8 +470,8 @@
                 </div>
                 <div class="col-md-4">
                     <h5>Liên hệ</h5>
-                    <p><i class="bi bi-envelope"></i> Email: info@dacsanquehuong.com</p>
-                    <p><i class="bi bi-telephone"></i> Hotline: 1900-xxxx</p>
+                    <p><i class="bi bi-envelope"></i> Email: 23110101@student.hcmute.edu.vn</p>
+                    <p><i class="bi bi-telephone"></i> Hotline: 0899956690</p>
                 </div>
                 <div class="col-md-4">
                     <h5>Theo dõi</h5>
@@ -488,6 +489,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<c:url value='/resources/js/main.js'/>"></script>
     <script>
         // Đảm bảo dropdown menu hoạt động trên tất cả các trang
         document.addEventListener('DOMContentLoaded', function() {

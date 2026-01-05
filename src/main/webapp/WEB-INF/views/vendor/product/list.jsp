@@ -12,6 +12,7 @@
 </head>
 <body>
 <jsp:include page="/WEB-INF/common/header.jsp" />
+<jsp:include page="/WEB-INF/common/toast-handler.jsp" />
 <div class="container-fluid mt-4">
     <h1 class="mb-4"><i class="bi bi-box-seam"></i> Quản lý Sản phẩm</h1>
     
@@ -38,40 +39,25 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <!-- Thông báo thành công -->
-                    <c:if test="${not empty success}">
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="bi bi-check-circle"></i> ${success}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
-
-                    <!-- Thông báo lỗi -->
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle"></i> ${error}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
-
                     <!-- Bảng danh sách -->
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead class="table-light">
                             <tr>
                                 <th width="5%">ID</th>
-                                <th width="30%">Tên sản phẩm</th>
-                                <th width="15%">Giá</th>
-                                <th width="10%">Tồn kho</th>
-                                <th width="20%">Danh mục</th>
-                                <th width="20%">Thao tác</th>
+                                <th width="10%">Hình ảnh</th>
+                                <th width="25%">Tên sản phẩm</th>
+                                <th width="12%">Giá</th>
+                                <th width="8%">Tồn kho</th>
+                                <th width="15%">Danh mục</th>
+                                <th width="25%">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody>
                             <c:choose>
                                 <c:when test="${empty products}">
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
+                                        <td colspan="7" class="text-center text-muted py-4">
                                             <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
                                             <h4 class="mt-3 text-muted">Chưa có dữ liệu</h4>
                                             <p class="text-muted">Bắt đầu quản lý sản phẩm bằng cách thêm sản phẩm mới.</p>
@@ -82,6 +68,23 @@
                                     <c:forEach var="p" items="${products}">
                                         <tr>
                                             <td>${p.id}</td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${not empty p.imageUrls && fn:length(p.imageUrls) > 0}">
+                                                        <img src="<c:url value='/files/${p.imageUrls[0]}' />" 
+                                                             alt="${p.nameVi}" 
+                                                             class="img-thumbnail" 
+                                                             style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
+                                                             onclick="showImageModal('<c:url value="/files/${p.imageUrls[0]}" />', '${p.nameVi}')" />
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="bg-light d-flex align-items-center justify-content-center" 
+                                                             style="width: 80px; height: 80px;">
+                                                            <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
                                             <td><strong>${p.nameVi}</strong></td>
                                             <td>
                                                 <c:choose>
@@ -139,6 +142,21 @@
     <input type="hidden" name="_method" value="delete" />
 </form>
 
+<!-- Modal hiển thị hình ảnh lớn -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Hình ảnh sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid" style="max-height: 70vh;" />
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function confirmDelete(id, name) {
@@ -147,6 +165,14 @@
             form.action = '<c:url value="/vendor/products/delete/"/>' + id;
             form.submit();
         }
+    }
+    
+    function showImageModal(imageSrc, productName) {
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        document.getElementById('modalImage').src = imageSrc;
+        document.getElementById('modalImage').alt = productName;
+        document.getElementById('imageModalLabel').textContent = productName;
+        modal.show();
     }
 </script>
 </body>

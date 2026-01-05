@@ -413,11 +413,20 @@
         </div>
     </div>
 
-    <footer>
+    <footer class="bg-dark text-white py-3">
         <div class="container">
-            <p class="mb-0">
-                &copy; <%= java.time.Year.now() %> Website Quảng bá và Kinh doanh Đặc sản Quê hương
-            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3 text-white">Liên hệ</h6>
+                    <p class="mb-2 text-white-50"><i class="bi bi-envelope text-primary"></i> Email: 23110101@student.hcmute.edu.vn</p>
+                    <p class="mb-2 text-white-50"><i class="bi bi-telephone text-success"></i> Hotline: 0899956690</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-0 text-white-50">
+                        &copy; <%= java.time.Year.now() %> Website Quảng bá và Kinh doanh Đặc sản Quê hương. Tất cả quyền được bảo lưu.
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 

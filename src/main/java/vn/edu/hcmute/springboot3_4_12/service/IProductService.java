@@ -25,7 +25,7 @@ public interface IProductService {
     ProductResponseDTO create(ProductRequestDTO dto, List<MultipartFile> files);
 
     @Transactional
-    ProductResponseDTO update(Long id, ProductRequestDTO dto);
+    ProductResponseDTO update(Long id, ProductRequestDTO dto, List<MultipartFile> files);
 
     void delete(Long id);
 

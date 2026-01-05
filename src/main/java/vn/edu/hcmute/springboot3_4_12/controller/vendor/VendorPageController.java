@@ -39,27 +39,47 @@ public class VendorPageController {
 
                     // Thống kê đơn hàng - đếm orders có sản phẩm của vendor này
                     List<Order> allOrders = orderRepository.findAll();
-                    long totalOrders = allOrders.stream()
+                    var vendorOrdersEntities = allOrders.stream()
                             .filter(order -> order.getItems() != null && order.getItems().stream()
                                     .anyMatch(item -> item.getProduct() != null &&
                                             item.getProduct().getVendor() != null &&
                                             item.getProduct().getVendor().getId().equals(vendor.getId())))
-                            .count();
+                            .collect(java.util.stream.Collectors.toList());
+                    
+                    long totalOrders = vendorOrdersEntities.size();
 
-                    // Thống kê doanh thu tháng này
+                    // Thống kê doanh thu - tính từ tổng tiền các đơn hàng đã giao
+                    var deliveredOrders = vendorOrdersEntities.stream()
+                            .filter(order -> order.getStatus() == vn.edu.hcmute.springboot3_4_12.entity.OrderStatus.DELIVERED)
+                            .collect(java.util.stream.Collectors.toList());
+                    
+                    double totalRevenue = deliveredOrders.stream()
+                            .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                            .sum();
+
+                    // Thống kê doanh thu tháng này (từ orders DELIVERED)
                     YearMonth currentMonth = YearMonth.now();
                     LocalDateTime startOfMonth = currentMonth.atDay(1).atStartOfDay();
                     LocalDateTime endOfMonth = currentMonth.atEndOfMonth().atTime(23, 59, 59);
 
-                    double monthlyRevenue = allOrders.stream()
+                    double monthlyRevenue = deliveredOrders.stream()
                             .filter(order -> order.getOrderDate() != null &&
                                     !order.getOrderDate().isBefore(startOfMonth) &&
                                     !order.getOrderDate().isAfter(endOfMonth))
-                            .flatMap(order -> order.getItems().stream())
-                            .filter(item -> item.getProduct() != null &&
-                                    item.getProduct().getVendor() != null &&
-                                    item.getProduct().getVendor().getId().equals(vendor.getId()))
-                            .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                            .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
+                            .sum();
+
+                    // Thống kê doanh thu tuần này
+                    LocalDateTime startOfWeek = LocalDateTime.now()
+                            .with(java.time.DayOfWeek.MONDAY)
+                            .withHour(0).withMinute(0).withSecond(0);
+                    LocalDateTime endOfWeek = startOfWeek.plusDays(6).withHour(23).withMinute(59).withSecond(59);
+
+                    double weeklyRevenue = deliveredOrders.stream()
+                            .filter(order -> order.getOrderDate() != null &&
+                                    !order.getOrderDate().isBefore(startOfWeek) &&
+                                    !order.getOrderDate().isAfter(endOfWeek))
+                            .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0.0)
                             .sum();
 
                     // Thống kê tin nhắn chưa đọc
@@ -73,7 +93,9 @@ public class VendorPageController {
                     // Truyền dữ liệu vào model
                     model.addAttribute("totalProducts", totalProducts);
                     model.addAttribute("totalOrders", totalOrders);
+                    model.addAttribute("totalRevenue", totalRevenue);
                     model.addAttribute("monthlyRevenue", monthlyRevenue);
+                    model.addAttribute("weeklyRevenue", weeklyRevenue);
                     model.addAttribute("unreadMessages", unreadMessages);
                 }
             }

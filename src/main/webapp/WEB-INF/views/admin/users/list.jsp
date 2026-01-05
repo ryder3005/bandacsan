@@ -38,21 +38,6 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <!-- Thông báo thành công -->
-                    <c:if test="${not empty success}">
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="bi bi-check-circle"></i> ${success}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
-
-                    <!-- Thông báo lỗi -->
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="bi bi-exclamation-triangle"></i> ${error}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    </c:if>
 
                     <!-- Bảng danh sách -->
                     <div class="table-responsive">
@@ -124,5 +109,6 @@
 </div>
 <jsp:include page="/WEB-INF/common/footer.jsp" />
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<jsp:include page="/WEB-INF/common/toast-handler.jsp" />
 </body>
 </html>
