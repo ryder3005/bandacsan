@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -154,7 +155,16 @@
                     </div>
                     <div class="mb-3">
                         <strong>Ngày đặt:</strong>
-                        <p class="mb-0"><fmt:formatDate value="${order.createdAt}" pattern="dd/MM/yyyy HH:mm"/></p>
+                        <p class="mb-0">
+                            <c:choose>
+                                <c:when test="${not empty order.createdAt}">
+                                    ${fn:substring(order.createdAt.toString(), 0, 10)} ${fn:substring(order.createdAt.toString(), 11, 16)}
+                                </c:when>
+                                <c:otherwise>
+                                    N/A
+                                </c:otherwise>
+                            </c:choose>
+                        </p>
                     </div>
                     <c:if test="${not empty order.payment}">
                         <div class="mb-3">

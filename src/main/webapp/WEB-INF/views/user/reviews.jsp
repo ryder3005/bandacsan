@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -249,7 +250,16 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <small><fmt:formatDate value="${review.createdAt}" pattern="dd/MM/yyyy"/></small>
+                                <small>
+                                    <c:choose>
+                                        <c:when test="${not empty review.createdAt}">
+                                            ${fn:substring(review.createdAt.toString(), 0, 10)}
+                                        </c:when>
+                                        <c:otherwise>
+                                            N/A
+                                        </c:otherwise>
+                                    </c:choose>
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -270,7 +280,14 @@
                             </span>
                             <span>
                                 <i class="fas fa-clock me-1"></i>
-                                <fmt:formatDate value="${review.createdAt}" pattern="HH:mm dd/MM/yyyy"/>
+                                <c:choose>
+                                    <c:when test="${not empty review.createdAt}">
+                                        ${fn:substring(review.createdAt.toString(), 11, 16)} ${fn:substring(review.createdAt.toString(), 0, 10)}
+                                    </c:when>
+                                    <c:otherwise>
+                                        N/A
+                                    </c:otherwise>
+                                </c:choose>
                             </span>
                         </div>
                     </div>

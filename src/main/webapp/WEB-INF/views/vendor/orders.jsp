@@ -173,7 +173,7 @@
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${not empty order.createdAt}">
-                                                        <fmt:formatDate value="${order.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                        ${fn:substring(order.createdAt.toString(), 0, 10)} ${fn:substring(order.createdAt.toString(), 11, 16)}
                                                     </c:when>
                                                     <c:otherwise>-</c:otherwise>
                                                 </c:choose>
