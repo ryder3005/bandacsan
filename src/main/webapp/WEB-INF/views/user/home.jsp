@@ -747,6 +747,70 @@
             background-size: cover;
             background-position: center;
         }
+
+        /* Animation cho thêm vào giỏ hàng */
+        @keyframes flyToCart {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(0.5) translate(var(--fly-x), var(--fly-y));
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0.3) translate(var(--fly-x), var(--fly-y));
+                opacity: 0;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+        }
+
+        .cart-icon-flying {
+            position: fixed;
+            z-index: 9999;
+            font-size: 2rem;
+            color: #28a745;
+            pointer-events: none;
+            animation: flyToCart 0.8s ease-in-out forwards;
+        }
+
+        .add-to-cart-btn.adding {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .add-to-cart-btn.success {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        .cart-icon-animate {
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        .success-checkmark {
+            display: inline-block;
+            margin-left: 5px;
+            animation: bounce 0.5s ease-in-out;
+        }
     </style>
 </div>
 <jsp:include page="/WEB-INF/common/floating-widgets.jsp"/>
@@ -756,7 +820,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Kiểm tra trạng thái đăng nhập từ Session
-        const isLoggedIn = ${ not empty sessionScope.user };
+        const isLoggedIn = <c:choose><c:when test="${not empty sessionScope.user}">true</c:when><c:otherwise>false</c:otherwise></c:choose>;
 
         // Chọn tất cả các nút có class add-to-cart-btn
         const cartButtons = document.querySelectorAll('.add-to-cart-btn');
@@ -788,6 +852,37 @@
     });
 
     function addToCart(productId) {
+        // Tìm nút được click
+        const button = document.querySelector(`.add-to-cart-btn[data-id="${productId}"]`);
+        if (!button) return;
+
+        // Disable button và thêm class adding
+        button.classList.add('adding');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang thêm...';
+
+        // Lấy vị trí của nút và icon giỏ hàng
+        const buttonRect = button.getBoundingClientRect();
+        const cartIcon = document.querySelector('.cart-icon, .bi-cart, [class*="cart"]');
+        let cartRect = { left: window.innerWidth - 100, top: 20 };
+        
+        if (cartIcon) {
+            cartRect = cartIcon.getBoundingClientRect();
+        }
+
+        // Tính toán vị trí bay
+        const flyX = cartRect.left - buttonRect.left;
+        const flyY = cartRect.top - buttonRect.top;
+
+        // Tạo icon bay
+        const flyingIcon = document.createElement('i');
+        flyingIcon.className = 'bi bi-cart-plus cart-icon-flying';
+        flyingIcon.style.left = buttonRect.left + buttonRect.width / 2 + 'px';
+        flyingIcon.style.top = buttonRect.top + buttonRect.height / 2 + 'px';
+        flyingIcon.style.setProperty('--fly-x', flyX + 'px');
+        flyingIcon.style.setProperty('--fly-y', flyY + 'px');
+        document.body.appendChild(flyingIcon);
+
         const cartData = {
             productId: parseInt(productId),
             quantity: 1
@@ -796,34 +891,63 @@
         // Lấy CSRF Token nếu dùng Spring Security
         const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
 
+        var headers = {
+            'Content-Type': 'application/json'
+        };
+        if (csrfToken) {
+            headers['X-CSRF-TOKEN'] = csrfToken;
+        }
+
         fetch('<c:url value="/user/cart/add"/>', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken })
-            },
+            headers: headers,
             body: JSON.stringify(cartData)
         })
             .then(async response => {
                 if (response.ok) {
-                    // THÀNH CÔNG: Dùng Toast success
-                    if (typeof showToast === 'function') {
-                        showToast('Đã thêm sản phẩm vào giỏ hàng thành công!', 'success');
-                    } else {
-                        alert("Sản phẩm đã được thêm vào giỏ hàng!");
+                    // Xóa icon bay sau animation
+                    setTimeout(() => {
+                        flyingIcon.remove();
+                    }, 800);
+
+                    // Hiệu ứng thành công trên nút
+                    button.classList.remove('adding');
+                    button.classList.add('success');
+                    button.innerHTML = '<i class="bi bi-check-circle"></i> Đã thêm!';
+                    
+                    // Hiệu ứng bounce trên icon giỏ hàng
+                    if (cartIcon) {
+                        cartIcon.classList.add('cart-icon-animate');
+                        setTimeout(() => {
+                            cartIcon.classList.remove('cart-icon-animate');
+                        }, 500);
                     }
+
+                    // Khôi phục nút sau 1.5s
+                    setTimeout(() => {
+                        button.classList.remove('success');
+                        button.innerHTML = originalText;
+                    }, 1500);
 
                     // Cập nhật badge giỏ hàng nếu có
                     if (typeof updateCartBadge === 'function') {
                         updateCartBadge();
                     }
                 } else if (response.status === 401) {
+                    flyingIcon.remove();
+                    button.classList.remove('adding');
+                    button.innerHTML = originalText;
                     if (typeof showToast === 'function') {
                         showToast('Phiên đăng nhập hết hạn!', 'danger');
                     }
-                    window.location.href = '<c:url value="/login"/>';
+                    setTimeout(() => {
+                        window.location.href = '<c:url value="/login"/>';
+                    }, 1000);
                 } else {
-                    // THẤT BẠI: Dùng Toast danger
+                    // THẤT BẠI
+                    flyingIcon.remove();
+                    button.classList.remove('adding');
+                    button.innerHTML = originalText;
                     const errorMsg = await response.text();
                     if (typeof showToast === 'function') {
                         showToast('Lỗi: ' + (errorMsg || 'Không thể thêm vào giỏ'), 'danger');
@@ -834,6 +958,9 @@
             })
             .catch(error => {
                 console.error('Error:', error);
+                flyingIcon.remove();
+                button.classList.remove('adding');
+                button.innerHTML = originalText;
                 if (typeof showToast === 'function') {
                     showToast('Lỗi kết nối đến máy chủ!', 'danger');
                 }

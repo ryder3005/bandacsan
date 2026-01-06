@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -214,34 +215,50 @@
     <c:choose>
         <c:when test="${not empty orders}">
             <c:forEach var="order" items="${orders}" varStatus="status">
-                <div class="order-card animate__animated animate__fadeInUp" style="animation-delay: ${status.index * 0.1}s" data-status="${order.status}">
+                <div class="order-card animate__animated animate__fadeInUp" style="animation-delay: ${status.index * 0.1}s" data-status="${not empty order.status ? order.status.name() : 'PENDING'}">
                     <div class="order-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h5 class="mb-1">Đơn hàng #${order.id}</h5>
-                                <small>Ngày đặt: <fmt:formatDate value="${order.createdAt}" pattern="dd/MM/yyyy HH:mm"/></small>
+                                <small>Ngày đặt: 
+                                    <c:choose>
+                                        <c:when test="${not empty order.createdAt}">
+                                            ${fn:substring(order.createdAt.toString(), 0, 10)} ${fn:substring(order.createdAt.toString(), 11, 16)}
+                                        </c:when>
+                                        <c:otherwise>
+                                            N/A
+                                        </c:otherwise>
+                                    </c:choose>
+                                </small>
                             </div>
                             <div class="text-end">
-                                <span class="order-status status-${order.status.name().toLowerCase()}">${order.status.name()}</span>
+                                <c:choose>
+                                    <c:when test="${not empty order.status}">
+                                        <span class="order-status status-${fn:toLowerCase(order.status.name())}">${order.status.name()}</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="order-status status-pending">PENDING</span>
+                                    </c:otherwise>
+                                </c:choose>
                                 <div class="mt-2 d-flex gap-2">
                                     <a href="<c:url value='/user/orders/${order.id}'/>" class="btn btn-view-detail btn-sm">
                                         <i class="fas fa-eye me-1"></i>Xem chi tiết
                                     </a>
-                                    <c:if test="${order.status == 'PENDING'}">
+                                    <c:if test="${not empty order.status && order.status.name() == 'PENDING'}">
                                         <form method="post" action="<c:url value='/user/orders/${order.id}/cancel'/>" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng #${order.id}? Đơn hàng sẽ không thể khôi phục sau khi hủy.');">
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fas fa-times-circle me-1"></i>Hủy đơn hàng
                                             </button>
                                         </form>
                                     </c:if>
-                                    <c:if test="${order.status == 'SHIPPING'}">
+                                    <c:if test="${not empty order.status && order.status.name() == 'SHIPPING'}">
                                         <form method="post" action="<c:url value='/user/orders/${order.id}/confirm-delivered'/>" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn đã nhận được hàng? Đơn hàng sẽ chuyển sang trạng thái đã giao.');">
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="fas fa-check-circle me-1"></i>Xác nhận đã nhận hàng
                                             </button>
                                         </form>
                                     </c:if>
-                                    <c:if test="${order.status == 'DELIVERED'}">
+                                    <c:if test="${not empty order.status && order.status.name() == 'DELIVERED'}">
                                         <button class="btn btn-warning btn-sm" onclick="openReviewModal(${order.id})">
                                             <i class="fas fa-star me-1"></i>Đánh giá
                                         </button>
@@ -279,6 +296,7 @@
                                 </div>
                             </div>
                         </c:forEach>
+                    </div>
                     <div class="order-total">
                         <div class="total-amount">
                             Tổng tiền: <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0"/> đ

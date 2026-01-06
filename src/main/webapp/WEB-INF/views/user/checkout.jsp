@@ -187,10 +187,12 @@
                 <div class="form-section">
                     <h3 class="section-title">Phương thức thanh toán</h3>
                     <div class="payment-option selected" data-method="COD">
-                        <input type="radio" name="paymentMethod" value="COD" checked> COD
+                        <input type="radio" name="paymentMethod" value="COD" id="paymentCOD" checked>
+                        <label for="paymentCOD" style="cursor: pointer; margin-left: 10px; margin-bottom: 0;">COD - Thanh toán khi nhận hàng</label>
                     </div>
                     <div class="payment-option" data-method="MOMO">
-                        <input type="radio" name="paymentMethod" value="MOMO"> MoMo
+                        <input type="radio" name="paymentMethod" value="MOMO" id="paymentMOMO">
+                        <label for="paymentMOMO" style="cursor: pointer; margin-left: 10px; margin-bottom: 0;">MoMo - Thanh toán online</label>
                     </div>
                 </div>
             </form>
@@ -246,7 +248,29 @@
 </div>
 
 <script>
-    <%-- Logic xử lý JavaScript giữ nguyên theo file gốc của bạn [cite: 65-79] --%>
+    // Xử lý click vào payment option
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        
+        paymentOptions.forEach(function(option) {
+            option.addEventListener('click', function() {
+                // Xóa class selected khỏi tất cả options
+                paymentOptions.forEach(function(opt) {
+                    opt.classList.remove('selected');
+                });
+                
+                // Thêm class selected cho option được click
+                this.classList.add('selected');
+                
+                // Chọn radio button tương ứng
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+            });
+        });
+    });
+
     async function handleCheckout() {
         const shippingAddress = document.getElementById('shippingAddress').value.trim();
         const phone = document.getElementById('phone').value.trim();

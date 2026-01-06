@@ -197,22 +197,115 @@
                     .product-card:hover .card-img-top {
                         transform: scale(1.1);
                     }
+
+                    /* Animation cho thêm vào giỏ hàng */
+                    @keyframes flyToCart {
+                        0% {
+                            transform: scale(1) translate(0, 0);
+                            opacity: 1;
+                        }
+                        50% {
+                            transform: scale(0.5) translate(var(--fly-x), var(--fly-y));
+                            opacity: 0.8;
+                        }
+                        100% {
+                            transform: scale(0.3) translate(var(--fly-x), var(--fly-y));
+                            opacity: 0;
+                        }
+                    }
+
+                    @keyframes bounce {
+                        0%, 100% {
+                            transform: scale(1);
+                        }
+                        50% {
+                            transform: scale(1.2);
+                        }
+                    }
+
+                    @keyframes pulse {
+                        0%, 100% {
+                            transform: scale(1);
+                            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+                        }
+                        50% {
+                            transform: scale(1.05);
+                            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+                        }
+                    }
+
+                    .cart-icon-flying {
+                        position: fixed;
+                        z-index: 9999;
+                        font-size: 2rem;
+                        color: #28a745;
+                        pointer-events: none;
+                        animation: flyToCart 0.8s ease-in-out forwards;
+                    }
+
+                    .btn.adding {
+                        pointer-events: none;
+                        opacity: 0.7;
+                    }
+
+                    .btn.success {
+                        animation: pulse 0.5s ease-in-out;
+                    }
+
+                    .cart-icon-animate {
+                        animation: bounce 0.5s ease-in-out;
+                    }
                 </style>
 
                 <jsp:include page="/WEB-INF/common/footer.jsp" />
                 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
                 <script>
                     async function addToCart(productId) {
+                        // Tìm nút được click
+                        const button = event.target.closest('button');
+                        if (!button) return;
+
+                        // Disable button và thêm class adding
+                        button.classList.add('adding');
+                        const originalText = button.innerHTML;
+                        button.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang thêm...';
+
+                        // Lấy vị trí của nút và icon giỏ hàng
+                        const buttonRect = button.getBoundingClientRect();
+                        const cartIcon = document.querySelector('.cart-icon, .bi-cart, [class*="cart"]');
+                        let cartRect = { left: window.innerWidth - 100, top: 20 };
+                        
+                        if (cartIcon) {
+                            cartRect = cartIcon.getBoundingClientRect();
+                        }
+
+                        // Tính toán vị trí bay
+                        const flyX = cartRect.left - buttonRect.left;
+                        const flyY = cartRect.top - buttonRect.top;
+
+                        // Tạo icon bay
+                        const flyingIcon = document.createElement('i');
+                        flyingIcon.className = 'bi bi-cart-plus cart-icon-flying';
+                        flyingIcon.style.left = buttonRect.left + buttonRect.width / 2 + 'px';
+                        flyingIcon.style.top = buttonRect.top + buttonRect.height / 2 + 'px';
+                        flyingIcon.style.setProperty('--fly-x', flyX + 'px');
+                        flyingIcon.style.setProperty('--fly-y', flyY + 'px');
+                        document.body.appendChild(flyingIcon);
+
                         // Lấy CSRF token nếu bạn dùng Spring Security
                         const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
 
                         try {
+                            var headers = {
+                                'Content-Type': 'application/json'
+                            };
+                            if (csrfToken) {
+                                headers['X-CSRF-TOKEN'] = csrfToken;
+                            }
+
                             const response = await fetch('<c:url value="/user/cart/add"/>', {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken })
-                                },
+                                headers: headers,
                                 body: JSON.stringify({
                                     productId: productId,
                                     quantity: 1
@@ -220,22 +313,56 @@
                             });
 
                             if (response.ok) {
-                                // Hiển thị thông báo thành công (có thể thay bằng Toast của Bootstrap)
-                                alert('Đã thêm sản phẩm vào giỏ hàng!');
+                                // Xóa icon bay sau animation
+                                setTimeout(() => {
+                                    flyingIcon.remove();
+                                }, 800);
+
+                                // Hiệu ứng thành công trên nút
+                                button.classList.remove('adding');
+                                button.classList.add('success');
+                                button.innerHTML = '<i class="bi bi-check-circle"></i> Đã thêm!';
+                                
+                                // Hiệu ứng bounce trên icon giỏ hàng
+                                if (cartIcon) {
+                                    cartIcon.classList.add('cart-icon-animate');
+                                    setTimeout(() => {
+                                        cartIcon.classList.remove('cart-icon-animate');
+                                    }, 500);
+                                }
+
+                                // Khôi phục nút sau 1.5s
+                                setTimeout(() => {
+                                    button.classList.remove('success');
+                                    button.innerHTML = originalText;
+                                }, 1500);
 
                                 // Cập nhật số lượng trên icon giỏ hàng
                                 if (typeof updateCartBadge === 'function') {
                                     updateCartBadge();
                                 }
                             } else if (response.status === 401) {
+                                flyingIcon.remove();
+                                button.classList.remove('adding');
+                                button.innerHTML = originalText;
                                 alert('Vui lòng đăng nhập để thực hiện chức năng này!');
-                                window.location.href = '<c:url value="/login"/>';
+                                setTimeout(() => {
+                                    window.location.href = '<c:url value="/login"/>';
+                                }, 1000);
                             } else {
+                                flyingIcon.remove();
+                                button.classList.remove('adding');
+                                button.innerHTML = originalText;
                                 const text = await response.text();
                                 alert('Có lỗi xảy ra: ' + text);
                             }
                         } catch (error) {
                             console.error('Error:', error);
+                            if (flyingIcon && flyingIcon.parentNode) {
+                                flyingIcon.remove();
+                            }
+                            button.classList.remove('adding');
+                            button.innerHTML = originalText;
                             alert('Không thể kết nối tới máy chủ.');
                         }
                     }
