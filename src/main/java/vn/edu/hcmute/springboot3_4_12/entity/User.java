@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users") // Đổi tên table thành 'users' vì 'user' là từ khóa của một số DB
 @Data
@@ -25,4 +27,10 @@ public class User {
     private String email;
 
     private String role; // Lưu: ADMIN, VENDOR, hoặc CUSTOMER
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
 }

@@ -1,4 +1,6 @@
 package vn.edu.hcmute.springboot3_4_12.controller.admin;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.hcmute.springboot3_4_12.service.IProductService;
 import vn.edu.hcmute.springboot3_4_12.service.ICategoryService;
 import vn.edu.hcmute.springboot3_4_12.service.impl.VendorService;
@@ -7,13 +9,11 @@ import vn.edu.hcmute.springboot3_4_12.dto.ProductRequestDTO;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -119,9 +119,12 @@ public class ProductPageController {
             return "admin/product/form";
         }
     }
-
     @PostMapping("/save")
-    public String saveProduct(HttpServletRequest request, Model model, RedirectAttributes redirectAttributes) {
+    public String saveProduct(
+            HttpServletRequest request,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files, // Thêm dòng này
+            Model model,
+            RedirectAttributes redirectAttributes) {
         try {
             String idStr = request.getParameter("id");
             String nameVi = request.getParameter("nameVi");
@@ -158,14 +161,16 @@ public class ProductPageController {
             // Xử lý categories
             if (categoryIds != null && categoryIds.length > 0) {
                 dto.setCategoryIds(java.util.Arrays.stream(categoryIds)
-                    .map(Long::parseLong)
-                    .collect(java.util.stream.Collectors.toList()));
+                        .map(Long::parseLong)
+                        .collect(java.util.stream.Collectors.toList()));
             }
 
-            productService.update(Long.parseLong(idStr), dto);
-            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sản phẩm thành công!");
+            // SỬA TẠI ĐÂY: Truyền thêm tham số files
+            productService.update(Long.parseLong(idStr), dto, files);
 
+            redirectAttributes.addFlashAttribute("successMessage", "Cập nhật sản phẩm thành công!");
             return "redirect:/admin/products";
+
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", "Có lỗi xảy ra khi cập nhật sản phẩm: " + e.getMessage());

@@ -103,4 +103,12 @@ public class CategoryService implements ICategoryService {
     public <S extends Category> S save(S entity) {
         return categoryRepository.save(entity);
     }
+    @Transactional(readOnly = true)
+    @Override
+    public CategoryResponseDTO getById(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Danh mục không tồn tại"));
+        return CategoryMapper.INSTANCE.toResponseDTO(category);
+    }
+
 }

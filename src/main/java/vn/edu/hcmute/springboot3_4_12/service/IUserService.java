@@ -14,4 +14,6 @@ public interface IUserService {
     List<UserResponseDTO> getAllUsers();
     UserResponseDTO update(Long id, UserRequestDTO dto);
     void deleteUser(Long id);
+    void forgotPassword(String email);
+    void resetPassword(String token, String newPassword);
 }

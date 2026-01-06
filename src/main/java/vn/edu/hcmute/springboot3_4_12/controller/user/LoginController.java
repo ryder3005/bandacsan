@@ -29,6 +29,16 @@ public class LoginController {
         return "register";
     }
 
+    @GetMapping("/forgot-password")
+    public String forgotPassword() {
+        return "forgot-password";
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPassword() {
+        return "reset-password";
+    }
+
     @Autowired
     private UserRepository userRepository;
 

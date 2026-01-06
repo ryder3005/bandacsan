@@ -74,8 +74,8 @@ public class VendorChatController {
     @PostMapping("/send")
     @ResponseBody
     public ChatMessageDTO sendMessage(@RequestParam Long roomId,
-            @RequestParam String message,
-            HttpSession session) {
+                                      @RequestParam String message,
+                                      HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             throw new RuntimeException("User not authenticated");

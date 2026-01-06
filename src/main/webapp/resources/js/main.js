@@ -65,8 +65,12 @@ function loadOrderStatusWidget() {
     // Show loading
     widgetContainer.innerHTML = '<div class="text-center text-muted small">Đang tải...</div>';
 
+    // Determine endpoint based on user role from global variable
+    const userRole = window.userRole || '';
+    const endpoint = userRole === 'VENDOR' ? '/vendor/my-orders/status/summary' : '/user/orders/status/summary';
+
     // Fetch order status data
-    fetch('/user/orders/status/summary')
+    fetch(endpoint)
         .then(response => {
             console.log('Response status:', response.status);
             if (!response.ok) {

@@ -15,62 +15,223 @@
 <body>
 <jsp:include page="/WEB-INF/common/header.jsp"/>
 
-<!-- Hero Section -->
-<div class="hero-section mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 60px 40px; color: white; text-align: center; margin-top: 30px;">
+<!-- Breadcrumb Navigation -->
+<div class="container-fluid bg-light py-3 border-bottom">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-8 mx-auto">
-                <i class="bi bi-journal-text display-4 mb-3 animate__animated animate__bounceIn"></i>
-                <h1 class="display-4 fw-bold mb-3 animate__animated animate__fadeInUp">
-                    <c:choose>
-                        <c:when test="${isMyBlogs}">Bài viết của tôi</c:when>
-                        <c:otherwise>Blog Đặc sản Việt Nam</c:otherwise>
-                    </c:choose>
-                </h1>
-                <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">
-                    Khám phá những câu chuyện thú vị về đặc sản quê hương và văn hóa ẩm thực Việt Nam
-                </p>
-                <c:if test="${not empty sessionScope.user}">
-                    <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-2s">
-                        <a href="<c:url value='/user/blogs/create'/>" class="btn btn-light btn-lg pulse">
-                            <i class="bi bi-plus-circle"></i> Viết bài mới
-                        </a>
-                        <c:if test="${!isMyBlogs}">
-                            <a href="<c:url value='/user/blogs/my-blogs'/>" class="btn btn-outline-light btn-lg">
-                                <i class="bi bi-person"></i> Bài viết của tôi
-                            </a>
-                        </c:if>
-                    </div>
-                </c:if>
-            </div>
-        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="<c:url value='/'/>" class="text-decoration-none">
+                        <i class="bi bi-house-door"></i> Trang chủ
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <i class="bi bi-journal-text"></i> Blog
+                </li>
+            </ol>
+        </nav>
     </div>
 </div>
 
-<div class="container page-transition">
+    <style>
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 60px 40px;
+            color: white;
+            text-align: center;
+            margin-top: 30px;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Blog Cards */
+        .blog-card {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            background: #fff;
+        }
+
+        .blog-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.08), transparent);
+            transition: left 0.6s;
+        }
+
+        .blog-card:hover::before {
+            left: 100%;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .blog-card .card-img-top {
+            height: 220px;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .blog-card:hover .card-img-top {
+            transform: scale(1.08);
+        }
+
+        /* Hover Overlay */
+        .hover-overlay {
+            background: rgba(0,0,0,0.85);
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .blog-card:hover .hover-overlay {
+            opacity: 1 !important;
+        }
+
+        /* Typography */
+        .blog-card .card-title {
+            font-size: 1.15rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-card .card-text {
+            font-size: 0.92rem;
+            line-height: 1.55;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 50px;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Badge */
+        .stats-badge {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Search */
+        .search-container {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            background: #fff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 50px 25px;
+                margin-top: 20px;
+                border-radius: 15px;
+            }
+            .hero-section .display-4 {
+                font-size: 1.9rem;
+            }
+            .blog-card .card-img-top {
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container-fluid px-lg-4 py-4 min-vh-100">
+
+    <!-- Hero Section -->
+    <div class="hero-section mb-5 animate__animated animate__fadeInDown">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-10 mx-auto">
+                    <div class="d-flex justify-content-center mb-4">
+                        <a href="<c:url value='/'/>" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-arrow-left"></i> Quay lại Trang chủ
+                        </a>
+                    </div>
+                    <i class="bi bi-journal-text display-3 mb-4 animate__animated animate__bounceIn"></i>
+                    <h1 class="display-4 fw-bold mb-4 animate__animated animate__fadeInUp">
+                        🌟 Blog Đặc sản Việt Nam
+                    </h1>
+                    <p class="lead mb-5 lh-lg animate__animated animate__fadeInUp animate__delay-1s">
+                        Khám phá những câu chuyện đậm đà hương vị quê hương và văn hóa ẩm thực ba miền Bắc - Trung - Nam Việt Nam
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Search Bar -->
-    <div class="card mb-4 search-container shadow-sm animate__animated animate__fadeInUp">
-        <div class="card-body">
-            <form method="GET" action="<c:url value='/user/blogs'/>" class="row g-3">
-                <div class="col-md-8">
-                    <div class="input-group">
-                        <span class="input-group-text bg-primary text-white">
-                            <i class="bi bi-search"></i>
+    <div class="card mb-5 search-container shadow-lg animate__animated animate__fadeInUp">
+        <div class="card-body p-4">
+            <form method="GET" action="<c:url value='/user/blogs'/>" class="row g-3 align-items-end">
+                <div class="col-lg-9 col-md-8">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-gradient text-white border-0" style="min-width: 55px;">
+                            <i class="bi bi-search fs-5"></i>
                         </span>
-                        <input type="text" name="search" class="form-control"
-                               placeholder="Tìm kiếm bài viết theo tiêu đề hoặc nội dung..."
-                               value="${searchKeyword}">
+                        <input type="text" name="search" class="form-control form-control-lg border-0 shadow-none ps-0"
+                               placeholder="🔍 Tìm kiếm bài viết theo tiêu đề, đặc sản, địa danh hoặc tác giả..."
+                               value="${searchKeyword}" autocomplete="off">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-3 col-md-4">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-fill">
-                            <i class="bi bi-search"></i> Tìm kiếm
+                        <button type="submit" class="btn btn-primary btn-lg flex-fill">
+                            <i class="bi bi-search me-1"></i>Tìm ngay
                         </button>
                         <c:if test="${not empty searchKeyword}">
-                            <a href="<c:url value='/user/blogs'/>" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle"></i>
+                            <a href="<c:url value='/user/blogs'/>" class="btn btn-outline-secondary btn-lg" title="Xóa tìm kiếm">
+                                <i class="bi bi-x-lg"></i>
                             </a>
                         </c:if>
                     </div>
@@ -79,411 +240,131 @@
         </div>
     </div>
 
-    <!-- Success/Error Messages -->
+    <!-- Messages -->
     <c:if test="${not empty success}">
-        <div class="alert alert-success alert-dismissible fade show animate__animated animate__slideInRight" role="alert">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm animate__animated animate__slideInRight mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> ${success}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
         </div>
     </c:if>
     <c:if test="${not empty error}">
-        <div class="alert alert-danger alert-dismissible fade show animate__animated animate__slideInRight" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm animate__animated animate__slideInRight mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> ${error}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
         </div>
     </c:if>
 
     <!-- Blog List -->
-    <c:choose>
-        <c:when test="${empty blogs}">
-            <div class="card text-center py-5 animate__animated animate__fadeInUp">
-                <div class="card-body">
-                    <i class="bi bi-journal-x display-1 text-muted mb-4"></i>
-                    <h4 class="text-muted mb-3">
-                        <c:choose>
-                            <c:when test="${not empty searchKeyword}">
-                                Không tìm thấy bài viết nào phù hợp với "<strong>${searchKeyword}</strong>"
-                            </c:when>
-                            <c:otherwise>
+    <div id="blogs-section">
+        <c:choose>
+            <c:when test="${empty blogs}">
+                <div class="text-center py-5 my-5 animate__animated animate__fadeInUp">
+                    <div class="card border-0 bg-transparent shadow-none">
+                        <div class="card-body p-5">
+                            <i class="bi bi-journal-x display-1 text-muted mb-4 opacity-75"></i>
+                            <h3 class="h2 fw-semibold text-muted mb-3">
                                 <c:choose>
-                                    <c:when test="${isMyBlogs}">Bạn chưa có bài viết nào</c:when>
-                                    <c:otherwise>Chưa có bài viết nào</c:otherwise>
+                                    <c:when test="${not empty searchKeyword}">
+                                        <i class="bi bi-search me-2"></i>Không tìm thấy bài viết nào
+                                    </c:when>
+                                    <c:otherwise>📚 Chưa có bài viết nào</c:otherwise>
                                 </c:choose>
-                            </c:otherwise>
-                        </c:choose>
-                    </h4>
-                    <p class="text-muted mb-4">
-                        <c:choose>
-                            <c:when test="${not empty searchKeyword}">Hãy thử tìm với từ khóa khác</c:when>
-                            <c:otherwise>Hãy là người đầu tiên chia sẻ kiến thức về đặc sản Việt Nam</c:otherwise>
-                        </c:choose>
-                    </p>
-                    <c:if test="${not empty sessionScope.user and empty searchKeyword}">
-                        <a href="<c:url value='/user/blogs/create'/>" class="btn btn-primary btn-lg">
-                            <i class="bi bi-plus-circle me-2"></i>
-                            <c:choose>
-                                <c:when test="${isMyBlogs}">Viết bài viết đầu tiên</c:when>
-                                <c:otherwise>Tạo bài viết mới</c:otherwise>
-                            </c:choose>
-                        </a>
-                    </c:if>
+                            </h3>
+                            <c:if test="${not empty searchKeyword}">
+                                <p class="lead text-muted mb-4">
+                                    Không có kết quả cho "<strong class="text-primary">${searchKeyword}</strong>"
+                                </p>
+                                <p class="text-muted">Hãy thử từ khóa khác như tên đặc sản, tỉnh thành...</p>
+                            </c:if>
+                            <c:if test="${empty searchKeyword}">
+                                <p class="lead text-muted mb-4 lh-lg">
+                                    Blog đang được xây dựng. Hãy quay lại sau để khám phá những câu chuyện thú vị về đặc sản Việt Nam!
+                                </p>
+                            </c:if>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </c:when>
-        <c:otherwise>
-            <div class="row g-4">
-                <c:forEach var="blog" items="${blogs}" varStatus="status">
-                    <div class="col-lg-6 col-xl-4">
-                        <article class="blog-card-modern h-100 animate__animated animate__fadeInUp"
-                                 style="animation-delay: ${status.index * 0.1}s;">
-                            <c:if test="${not empty blog.imageUrl}">
-                                <div class="blog-image-wrapper">
-                                    <img src="${blog.imageUrl}" class="blog-card-image" alt="${blog.titleVi}">
-                                    <div class="blog-image-overlay">
-                                        <a href="<c:url value='/user/blogs/${blog.id}'/>" class="btn btn-light btn-sm">
-                                            <i class="bi bi-arrow-right me-1"></i>Đọc thêm
+            </c:when>
+            <c:otherwise>
+                <div class="row g-4 mb-5">
+                    <c:forEach var="blog" items="${blogs}" varStatus="status">
+                        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                            <article class="card h-100 blog-card animate__animated animate__fadeInUp"
+                                     style="animation-delay: ${status.index * 0.1}s;">
+
+                                <!-- Image -->
+                                <c:if test="${not empty blog.imageUrl}">
+                                    <div class="position-relative overflow-hidden">
+                                        <img src="${blog.imageUrl}" class="card-img-top"
+                                             alt="${blog.titleVi}" loading="lazy">
+                                        <div class="card-img-overlay d-flex align-items-center justify-content-center opacity-0 hover-overlay">
+                                            <a href="<c:url value='/user/blogs/${blog.id}'/>" class="btn btn-primary btn-lg px-4">
+                                                <i class="bi bi-eye-fill me-2"></i>Đọc ngay
+                                            </a>
+                                        </div>
+                                    </div>
+                                </c:if>
+
+                                <!-- Content -->
+                                <div class="card-body d-flex flex-column p-4">
+                                    <h2 class="card-title h5 mb-3">
+                                        <a href="<c:url value='/user/blogs/${blog.id}'/>"
+                                           class="text-decoration-none text-dark stretched-link">
+                                                ${blog.titleVi}
+                                        </a>
+                                    </h2>
+
+                                    <p class="card-text text-muted flex-grow-1 mb-3">${blog.summaryVi}</p>
+
+                                    <!-- Meta -->
+                                    <div class="d-flex justify-content-between align-items-end mb-3 text-small">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                                 style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 600;">
+                                                    ${not empty blog.authorName ? blog.authorName.substring(0,1).toUpperCase() : '👤'}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold text-dark small">${blog.authorName}</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-calendar3 me-1"></i>
+                                                        ${blog.createdAt.dayOfMonth}/${blog.createdAt.monthValue}/${blog.createdAt.year}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <c:if test="${not empty blog.products and blog.products.size() > 0}">
+                                            <span class="stats-badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                🛒 ${blog.products.size()} sản phẩm
+                                            </span>
+                                        </c:if>
+                                    </div>
+
+                                    <!-- CTA -->
+                                    <div class="mt-auto">
+                                        <a href="<c:url value='/user/blogs/${blog.id}'/>" class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="bi bi-arrow-right me-2"></i>Đọc chi tiết
                                         </a>
                                     </div>
-                                    <div class="blog-badge">
-                                        <i class="bi bi-bookmark-fill"></i>
-                                    </div>
                                 </div>
-                            </c:if>
-                            <c:if test="${empty blog.imageUrl}">
-                                <div class="blog-image-wrapper bg-gradient-primary d-flex align-items-center justify-content-center" style="height: 200px;">
-                                    <i class="bi bi-journal-text text-white" style="font-size: 4rem; opacity: 0.3;"></i>
-                                </div>
-                            </c:if>
-                            
-                            <div class="blog-card-content">
-                                <div class="blog-meta mb-2">
-                                    <span class="blog-author">
-                                        <i class="bi bi-person-circle me-1"></i>
-                                        ${blog.authorName}
-                                    </span>
-                                    <span class="blog-date">
-                                        <i class="bi bi-calendar3 me-1"></i>
-                                        ${blog.formattedCreatedAt}
-                                    </span>
-                                </div>
-                                
-                                <h3 class="blog-title">
-                                    <a href="<c:url value='/user/blogs/${blog.id}'/>" class="text-decoration-none">
-                                        ${blog.titleVi}
-                                    </a>
-                                </h3>
-                                
-                                <p class="blog-excerpt">${blog.summaryVi}</p>
-                                
-                                <div class="blog-footer">
-                                    <c:if test="${not empty blog.products}">
-                                        <span class="blog-tag">
-                                            <i class="bi bi-tag-fill me-1"></i>
-                                            ${blog.products.size()} sản phẩm
-                                        </span>
-                                    </c:if>
-                                    
-                                    <c:if test="${sessionScope.user.id == blog.authorId}">
-                                        <div class="blog-actions ms-auto">
-                                            <a href="<c:url value='/user/blogs/edit/${blog.id}'/>" 
-                                               class="btn btn-sm btn-outline-primary" 
-                                               title="Chỉnh sửa">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    onclick="deleteBlog(${blog.id}, '${blog.titleVi}')"
-                                                    title="Xóa">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </c:if>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                </c:forEach>
-            </div>
-        </c:otherwise>
-    </c:choose>
+                            </article>
+                        </div>
+                    </c:forEach>
+                </div>
+            </c:otherwise>
+        </c:choose>
+    </div>
 </div>
 
-<style>
-/* Hero Section */
-.hero-section {
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: float 20s infinite linear;
-}
-
-@keyframes float {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* Modern Blog Cards */
-.blog-card-modern {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(0,0,0,0.05);
-}
-
-.blog-card-modern:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
-    border-color: rgba(102, 126, 234, 0.3);
-}
-
-.blog-image-wrapper {
-    position: relative;
-    overflow: hidden;
-    height: 220px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.blog-card-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.blog-card-modern:hover .blog-card-image {
-    transform: scale(1.15);
-}
-
-.blog-image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.blog-card-modern:hover .blog-image-overlay {
-    opacity: 1;
-}
-
-.blog-badge {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
-    background: rgba(255,255,255,0.95);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #667eea;
-    font-size: 1.2rem;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    transition: transform 0.3s ease;
-}
-
-.blog-card-modern:hover .blog-badge {
-    transform: scale(1.1) rotate(15deg);
-}
-
-.blog-card-content {
-    padding: 25px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.blog-meta {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    font-size: 0.85rem;
-    color: #6c757d;
-}
-
-.blog-author, .blog-date {
-    display: flex;
-    align-items: center;
-}
-
-.blog-author i, .blog-date i {
-    color: #667eea;
-}
-
-.blog-title {
-    font-size: 1.35rem;
-    font-weight: 700;
-    margin: 15px 0;
-    line-height: 1.4;
-}
-
-.blog-title a {
-    color: #2c3e50;
-    transition: color 0.3s ease;
-}
-
-.blog-title a:hover {
-    color: #667eea;
-}
-
-.blog-excerpt {
-    color: #6c757d;
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin-bottom: 20px;
-    flex: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.blog-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 15px;
-    border-top: 1px solid rgba(0,0,0,0.08);
-}
-
-.blog-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-    color: #667eea;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-.blog-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.blog-actions .btn {
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.blog-actions .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Badge */
-.badge {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-}
-
-/* Button Improvements */
-.btn {
-    font-weight: 500;
-    letter-spacing: 0.5px;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, #5a67d8 0%, #764ba2 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-/* Search Container */
-.search-container {
-    border-radius: 15px;
-    border: none;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-/* Empty State */
-.card h4 {
-    font-weight: 600;
-    color: #6c757d;
-}
-
-/* Pulse Animation */
-.pulse {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* Responsive Improvements */
-@media (max-width: 768px) {
-    .hero-section {
-        padding: 40px 20px;
-        margin-top: 20px;
-    }
-
-    .hero-section .display-4 {
-        font-size: 2rem;
-    }
-
-    .blog-card-modern {
-        margin-bottom: 1.5rem;
-    }
-    
-    .blog-image-wrapper {
-        height: 180px;
-    }
-    
-    .blog-title {
-        font-size: 1.15rem;
-    }
-    
-    .blog-card-content {
-        padding: 20px;
-    }
-}
-</style>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 // Delete blog confirmation
 function deleteBlog(blogId, title) {
-    if (confirm('Bạn có chắc muốn xóa bài viết "' + title + '"?')) {
+    if (confirm(`Bạn có chắc muốn xóa bài viết "${title}"?`)) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '<c:url value="/user/blogs/delete/"/>' + blogId;
+        form.action = `<c:url value="/user/blogs/delete/"/>${blogId}`;
 
         // Add CSRF token if needed
         const csrfInput = document.createElement('input');
@@ -497,9 +378,3 @@ function deleteBlog(blogId, title) {
     }
 }
 </script>
-
-<jsp:include page="/WEB-INF/common/footer.jsp"/>
-<jsp:include page="/WEB-INF/common/Toast.jsp"/>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>

@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập - Đặc sản quê hương</title>
+    <title>Quên mật khẩu - Đặc sản quê hương</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -19,7 +19,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background: linear-gradient(-45deg, #f093fb, #f5576c, #4facfe, #00f2fe);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             min-height: 100vh;
@@ -47,15 +47,15 @@
             pointer-events: none;
         }
 
-        .login-container {
-            max-width: 450px;
+        .forgot-password-container {
+            max-width: 500px;
             width: 100%;
             padding: 20px;
             position: relative;
             z-index: 1;
         }
 
-        .login-card {
+        .forgot-password-card {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             border-radius: 25px;
@@ -76,8 +76,8 @@
             }
         }
 
-        .login-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .forgot-password-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             padding: 50px 30px 40px;
             text-align: center;
@@ -85,7 +85,7 @@
             overflow: hidden;
         }
 
-        .login-header::before {
+        .forgot-password-header::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -101,7 +101,7 @@
             to { transform: rotate(360deg); }
         }
 
-        .login-header h2 {
+        .forgot-password-header h2 {
             margin: 0;
             font-weight: 700;
             font-size: 32px;
@@ -110,7 +110,7 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .login-header p {
+        .forgot-password-header p {
             margin: 15px 0 0 0;
             opacity: 0.9;
             font-size: 16px;
@@ -118,7 +118,7 @@
             z-index: 2;
         }
 
-        .login-body {
+        .forgot-password-body {
             padding: 40px 30px;
         }
 
@@ -129,11 +129,6 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 25px;
         }
 
         .form-control {
@@ -147,23 +142,14 @@
         }
 
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #f093fb;
+            box-shadow: 0 0 0 0.2rem rgba(240, 147, 251, 0.25);
             background: white;
             transform: translateY(-2px);
         }
 
-        .input-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #667eea;
-            font-size: 18px;
-        }
-
-        .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn-submit {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             border: none;
             border-radius: 12px;
             padding: 15px;
@@ -177,7 +163,7 @@
             margin-bottom: 20px;
         }
 
-        .btn-login::before {
+        .btn-submit::before {
             content: '';
             position: absolute;
             top: 0;
@@ -188,13 +174,13 @@
             transition: left 0.5s;
         }
 
-        .btn-login:hover::before {
+        .btn-submit:hover::before {
             left: 100%;
         }
 
-        .btn-login:hover {
+        .btn-submit:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 15px 35px rgba(240, 147, 251, 0.4);
             color: white;
         }
 
@@ -214,7 +200,16 @@
             box-shadow: 0 5px 15px rgba(255, 154, 158, 0.3);
         }
 
-        .register-link {
+        .alert-success {
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 15px 20px;
+            box-shadow: 0 5px 15px rgba(212, 237, 218, 0.3);
+        }
+
+        .back-link {
             text-align: center;
             margin-top: 25px;
             padding-top: 25px;
@@ -222,7 +217,7 @@
             position: relative;
         }
 
-        .register-link::before {
+        .back-link::before {
             content: 'or';
             position: absolute;
             top: -12px;
@@ -235,48 +230,34 @@
             font-weight: 500;
         }
 
-        .register-link a {
-            color: #667eea;
+        .back-link a {
+            color: #f093fb;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
             position: relative;
         }
 
-        .register-link a:hover {
-            color: #764ba2;
+        .back-link a:hover {
+            color: #f5576c;
             text-decoration: none;
         }
 
-        .register-link a::after {
+        .back-link a::after {
             content: '';
             position: absolute;
             bottom: -2px;
             left: 0;
             width: 0;
             height: 2px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             transition: width 0.3s ease;
         }
 
-        .register-link a:hover::after {
+        .back-link a:hover::after {
             width: 100%;
         }
 
-        .input-group-text {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border: 2px solid #e0e6ed;
-            border-right: none;
-            border-radius: 12px 0 0 12px;
-            color: #667eea;
-        }
-
-        .input-group .form-control {
-            border-left: none;
-            border-radius: 0 12px 12px 0;
-        }
-
-        /* Floating particles animation */
         .particle {
             position: absolute;
             width: 4px;
@@ -315,37 +296,16 @@
             50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
         }
 
-        /* Loading state */
-        .btn-loading {
-            position: relative;
-            color: transparent !important;
-        }
-
-        .btn-loading::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            top: 50%;
-            left: 50%;
-            margin-left: -8px;
-            margin-top: -8px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
         @media (max-width: 768px) {
-            .login-header {
+            .forgot-password-header {
                 padding: 40px 20px 30px;
             }
 
-            .login-header h2 {
+            .forgot-password-header h2 {
                 font-size: 28px;
             }
 
-            .login-body {
+            .forgot-password-body {
                 padding: 30px 20px;
             }
 
@@ -362,56 +322,43 @@
     <div class="particle"></div>
     <div class="particle"></div>
 
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <h2><i class="bi bi-shop"></i> Đặc sản quê hương</h2>
-                <p>Đăng nhập vào tài khoản của bạn</p>
+    <div class="forgot-password-container">
+        <div class="forgot-password-card">
+            <div class="forgot-password-header">
+                <h2><i class="bi bi-key"></i> Quên mật khẩu</h2>
+                <p>Nhập email để nhận link đặt lại mật khẩu</p>
             </div>
-            <div class="login-body">
-                <c:if test="${not empty param.success}">
-                    <div class="alert alert-success" role="alert" style="background-color: #d4edda; color: #155724; border-radius: 10px; padding: 12px 15px; margin-bottom: 20px;">
-                        <i class="bi bi-check-circle"></i> ${param.success}
-                    </div>
-                </c:if>
+            <div class="forgot-password-body">
                 <c:if test="${not empty message}">
                     <div class="alert alert-danger" role="alert">
                         <i class="bi bi-exclamation-triangle"></i> ${message}
                     </div>
                 </c:if>
 
-                <form action="<c:url value='/perform_login'/>" method="post" id="loginForm">
+                <c:if test="${not empty successMessage}">
+                    <div class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle"></i> ${successMessage}
+                    </div>
+                </c:if>
+
+                <form id="forgotPasswordForm" method="post">
                     <div class="mb-4">
                         <label class="form-label">
-                            <i class="bi bi-person"></i> Tài khoản
+                            <i class="bi bi-envelope"></i> Email
                         </label>
-                        <input class="form-control" type="text" name="username" required 
-                               placeholder="Nhập tên đăng nhập" autofocus/>
+                        <input class="form-control" type="email" name="email" id="email" required 
+                               placeholder="Nhập địa chỉ email của bạn" autofocus/>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label">
-                            <i class="bi bi-lock"></i> Mật khẩu
-                        </label>
-                        <input class="form-control" type="password" name="password" required 
-                               placeholder="Nhập mật khẩu"/>
-                    </div>
-
-                    <div class="mb-3 text-end">
-                        <a href="<c:url value='/forgot-password'/>" style="color: #667eea; text-decoration: none; font-size: 14px;">
-                            <i class="bi bi-question-circle"></i> Quên mật khẩu?
-                        </a>
-                    </div>
-
-                    <button type="submit" class="btn btn-login">
-                        <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                    <button type="submit" class="btn btn-submit" id="submitBtn">
+                        <i class="bi bi-send"></i> Gửi yêu cầu
                     </button>
                 </form>
 
-                <div class="register-link">
-                    <span>Chưa có tài khoản? </span>
-                    <a href="<c:url value='/register'/>">
-                        <i class="bi bi-person-plus"></i> Đăng ký ngay
+                <div class="back-link">
+                    <span>Nhớ mật khẩu? </span>
+                    <a href="<c:url value='/login'/>">
+                        <i class="bi bi-arrow-left"></i> Quay lại đăng nhập
                     </a>
                 </div>
             </div>
@@ -420,11 +367,52 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-focus on username field
-        document.addEventListener('DOMContentLoaded', function() {
-            const usernameInput = document.querySelector('input[name="username"]');
-            if (usernameInput) {
-                usernameInput.focus();
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const email = document.getElementById('email').value;
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
+            
+            try {
+                const response = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Success
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + data.message;
+                    document.querySelector('.forgot-password-body').insertBefore(alertDiv, document.getElementById('forgotPasswordForm'));
+                    
+                    // Clear form
+                    document.getElementById('email').value = '';
+                } else {
+                    // Error
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger';
+                    alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + (data.error || 'Có lỗi xảy ra');
+                    document.querySelector('.forgot-password-body').insertBefore(alertDiv, document.getElementById('forgotPasswordForm'));
+                }
+            } catch (error) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Có lỗi xảy ra khi kết nối đến server';
+                document.querySelector('.forgot-password-body').insertBefore(alertDiv, document.getElementById('forgotPasswordForm'));
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-send"></i> Gửi yêu cầu';
             }
         });
     </script>

@@ -1,6 +1,7 @@
 package vn.edu.hcmute.springboot3_4_12.controller.admin.api;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import vn.edu.hcmute.springboot3_4_12.dto.ProductRequestDTO;
@@ -54,15 +55,21 @@ public class ProductController {
 
     /* ================= UPDATE ================= */
 
-    @PutMapping("/{id}")
+    /* ================= UPDATE ================= */
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductResponseDTO> update(
             @PathVariable Long id,
-            @RequestBody ProductRequestDTO dto
+            @Valid @RequestPart("product") ProductRequestDTO dto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
-        // Validation được xử lý trong service layer
         try {
-            ProductResponseDTO result = productService.update(id, dto);
+            // Gọi service với đủ 3 tham số theo định nghĩa mới
+            ProductResponseDTO result = productService.update(id, dto, files);
             return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            // Trả về thông báo lỗi cụ thể (ví dụ: Sản phẩm không tồn tại)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

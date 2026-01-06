@@ -3,13 +3,23 @@
 
         <!-- Floating Widgets Container -->
         <div class="floating-widgets">
-            <!-- Cart Widget - Only for USER role (not VENDOR) -->
-            <c:if test="${not empty sessionScope.user and sessionScope.user.role != 'VENDOR'}">
+            <!-- Cart Widget - For USER, ADMIN, and VENDOR -->
+            <c:if test="${not empty sessionScope.user}">
                 <div class="floating-widget cart-widget" id="cartWidget">
-                    <a href="<c:url value='/user/cart'/>" class="widget-button" title="Giỏ hàng">
-                        <i class="bi bi-cart3"></i>
-                        <span class="widget-badge" id="cartBadge">0</span>
-                    </a>
+                    <c:choose>
+                        <c:when test="${sessionScope.user.role == 'VENDOR'}">
+                            <a href="<c:url value='/vendor/cart'/>" class="widget-button" title="Giỏ hàng">
+                                <i class="bi bi-cart3"></i>
+                                <span class="widget-badge" id="cartBadge">0</span>
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="<c:url value='/user/cart'/>" class="widget-button" title="Giỏ hàng">
+                                <i class="bi bi-cart3"></i>
+                                <span class="widget-badge" id="cartBadge">0</span>
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </c:if>
 
@@ -179,14 +189,43 @@
                 }
             }
 
+            // Update cart badge for vendor
+            async function updateCartBadgeVendor() {
+                try {
+                    const response = await fetch('<c:url value="/vendor/cart"/>');
+                    if (response.ok) {
+                        const text = await response.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+
+                        const cartItems = doc.querySelectorAll('.cart-item');
+                        const count = cartItems.length;
+
+                        const badge = document.getElementById('cartBadge');
+                        if (badge) {
+                            badge.textContent = count;
+                            badge.style.display = count > 0 ? 'flex' : 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating cart badge:', error);
+                }
+            }
+
             // Update badges on page load
             document.addEventListener('DOMContentLoaded', function () {
                 <c:if test="${not empty sessionScope.user}">
-                    // Only update cart badge for non-VENDOR users
-                    <c:if test="${sessionScope.user.role != 'VENDOR'}">
-                        updateCartBadge();
-                        setInterval(updateCartBadge, 30000);
-                    </c:if>
+                    // Update cart badge for all users (including VENDOR)
+                    <c:choose>
+                        <c:when test="${sessionScope.user.role == 'VENDOR'}">
+                            updateCartBadgeVendor();
+                            setInterval(updateCartBadgeVendor, 30000);
+                        </c:when>
+                        <c:otherwise>
+                            updateCartBadge();
+                            setInterval(updateCartBadge, 30000);
+                        </c:otherwise>
+                    </c:choose>
 
                     // Update chat badge for all logged-in users
                     updateChatBadge();

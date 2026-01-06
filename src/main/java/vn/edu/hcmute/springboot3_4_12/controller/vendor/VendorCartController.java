@@ -1,4 +1,4 @@
-package vn.edu.hcmute.springboot3_4_12.controller.user;
+package vn.edu.hcmute.springboot3_4_12.controller.vendor;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,45 +15,37 @@ import jakarta.servlet.http.HttpSession;
 import vn.edu.hcmute.springboot3_4_12.entity.User;
 
 @Controller
-@RequestMapping("/user/cart")
+@RequestMapping("/vendor/cart")
 @RequiredArgsConstructor
-public class CartController {
+public class VendorCartController {
 
     private final ICartService cartService;
 
     @GetMapping
     public String viewCart(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null || !"VENDOR".equals(user.getRole())) {
             return "redirect:/login";
         }
 
         try {
             CartDTO cart = cartService.getCartByUserId(user.getId());
             model.addAttribute("cart", cart);
-            // Support both user and vendor roles
-            if ("VENDOR".equals(user.getRole())) {
-                return "vendor/cart";
-            }
-            return "user/cart";
+            return "vendor/cart";
         } catch (Exception e) {
             model.addAttribute("error", "Không thể tải giỏ hàng: " + e.getMessage());
-            if (user != null && "VENDOR".equals(user.getRole())) {
-                return "vendor/cart";
-            }
-            return "user/cart";
+            return "vendor/cart";
         }
     }
 
     @PostMapping("/add")
-    @ResponseBody // Trả về dữ liệu (JSON/Text) thay vì tìm view
+    @ResponseBody
     public ResponseEntity<?> addToCart(@RequestBody CartRequestDTO request,
                                        HttpSession session) {
         User user = (User) session.getAttribute("user");
 
-        // 1. Kiểm tra đăng nhập
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập");
+        if (user == null || !"VENDOR".equals(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập bằng tài khoản Vendor");
         }
 
         try {
@@ -70,7 +62,7 @@ public class CartController {
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null || !"VENDOR".equals(user.getRole())) {
             return "redirect:/login";
         }
 
@@ -81,7 +73,7 @@ public class CartController {
             redirectAttributes.addFlashAttribute("error", "Không thể cập nhật: " + e.getMessage());
         }
 
-        return getCartRedirectUrl(user);
+        return "redirect:/vendor/cart";
     }
 
     @PostMapping("/remove")
@@ -89,7 +81,7 @@ public class CartController {
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null || !"VENDOR".equals(user.getRole())) {
             return "redirect:/login";
         }
 
@@ -100,13 +92,13 @@ public class CartController {
             redirectAttributes.addFlashAttribute("error", "Không thể xóa sản phẩm: " + e.getMessage());
         }
 
-        return getCartRedirectUrl(user);
+        return "redirect:/vendor/cart";
     }
 
     @PostMapping("/clear")
     public String clearCart(HttpSession session, RedirectAttributes redirectAttributes) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
+        if (user == null || !"VENDOR".equals(user.getRole())) {
             return "redirect:/login";
         }
 
@@ -117,13 +109,7 @@ public class CartController {
             redirectAttributes.addFlashAttribute("error", "Không thể xóa giỏ hàng: " + e.getMessage());
         }
 
-        return getCartRedirectUrl(user);
-    }
-
-    private String getCartRedirectUrl(User user) {
-        if (user != null && "VENDOR".equals(user.getRole())) {
-            return "redirect:/vendor/cart";
-        }
-        return "redirect:/user/cart";
+        return "redirect:/vendor/cart";
     }
 }
+

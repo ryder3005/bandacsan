@@ -342,14 +342,21 @@
     </div> <!-- End page-transition -->
 </div>
 <jsp:include page="/WEB-INF/common/footer.jsp" />
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Đảm bảo dropdown menu hoạt động trên trang admin dashboard
-    document.addEventListener('DOMContentLoaded', function() {
+    // Chờ Bootstrap được load xong
+    window.addEventListener('load', function() {
+        // Khởi tạo lại Bootstrap dropdowns sau khi page load
+        if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+            dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
+            });
+        }
+        
         // Đóng dropdown khi click bên ngoài
         document.addEventListener('click', function(event) {
             if (!event.target.closest('.dropdown')) {
-                // Đóng tất cả dropdown đang mở
                 document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
                     menu.classList.remove('show');
                     var toggle = menu.previousElementSibling;
@@ -366,38 +373,7 @@
                 event.stopPropagation();
             });
         });
-
-        // Đảm bảo dropdown toggle hoạt động
-        document.querySelectorAll('.dropdown-toggle').forEach(function(toggle) {
-            toggle.addEventListener('click', function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                var menu = this.nextElementSibling;
-                if (menu && menu.classList.contains('dropdown-menu')) {
-                    // Đóng dropdown khác trước
-                    document.querySelectorAll('.dropdown-menu.show').forEach(function(otherMenu) {
-                        if (otherMenu !== menu) {
-                            otherMenu.classList.remove('show');
-                            var otherToggle = otherMenu.previousElementSibling;
-                            if (otherToggle) {
-                                otherToggle.setAttribute('aria-expanded', 'false');
-                            }
-                        }
-                    });
-
-                    // Toggle menu hiện tại
-                    var isExpanded = this.getAttribute('aria-expanded') === 'true';
-                    if (isExpanded) {
-                        menu.classList.remove('show');
-                        this.setAttribute('aria-expanded', 'false');
-                    } else {
-                        menu.classList.add('show');
-                        this.setAttribute('aria-expanded', 'true');
-                    }
-                }
-            });
-        });
+    });
 
         // Loading functions
         function showLoading() {

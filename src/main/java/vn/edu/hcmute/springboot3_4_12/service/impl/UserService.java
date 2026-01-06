@@ -11,9 +11,12 @@ import vn.edu.hcmute.springboot3_4_12.dto.UserResponseDTO;
 import vn.edu.hcmute.springboot3_4_12.entity.User;
 
 import vn.edu.hcmute.springboot3_4_12.repository.UserRepository;
+import vn.edu.hcmute.springboot3_4_12.service.EmailService;
 import vn.edu.hcmute.springboot3_4_12.service.IUserService;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +25,7 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
     @Override
     @Transactional
     public UserResponseDTO register(UserRequestDTO dto) {
@@ -29,7 +33,9 @@ public class UserService implements IUserService {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new RuntimeException("Username đã tồn tại!");
         }
-
+        if (userRepository.existsUserByEmailContainingIgnoreCase(dto.getEmail())) {
+            throw new RuntimeException("Email này đã được sử dụng!");
+        }
         // 2. Map DTO sang Entity & Mã hóa mật khẩu
         User user = new User();
         user.setUsername(dto.getUsername());
@@ -90,6 +96,48 @@ public class UserService implements IUserService {
     public void deleteUser(Long id) {
         if(!userRepository.existsById(id)) throw new RuntimeException("User không tồn tại");
         userRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) {
+        // 1. Tìm user theo email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống"));
+
+        // 2. Tạo reset token
+        String resetToken = UUID.randomUUID().toString();
+        LocalDateTime expiryTime = LocalDateTime.now().plusHours(1); // Token hết hạn sau 1 giờ
+
+        // 3. Lưu token vào database
+        user.setResetToken(resetToken);
+        user.setResetTokenExpiry(expiryTime);
+        userRepository.save(user);
+
+        // 4. Gửi email chứa link reset password
+        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        // 1. Tìm user theo reset token
+        User user = userRepository.findByResetToken(token)
+                .orElseThrow(() -> new RuntimeException("Token không hợp lệ hoặc đã hết hạn"));
+
+        // 2. Kiểm tra token còn hạn không
+        if (user.getResetTokenExpiry() == null || user.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới");
+        }
+
+        // 3. Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(newPassword));
+        
+        // 4. Xóa reset token sau khi đã sử dụng
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        
+        userRepository.save(user);
     }
 
 //    @Override

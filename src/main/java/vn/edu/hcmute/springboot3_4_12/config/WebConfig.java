@@ -19,6 +19,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/login",              // Trang đăng nhập
                         "/register",           // Trang đăng ký
+                        "/forgot-password",    // Trang quên mật khẩu
+                        "/reset-password",     // Trang đặt lại mật khẩu
                         "/perform_login",      // Xử lý đăng nhập
                         "/logout",             // Đăng xuất
                         "/error",              // Trang lỗi

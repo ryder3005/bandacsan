@@ -1,6 +1,6 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html;charset=UTF-8" pageEncoding="UTF-8"%>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary px-4">
     <a class="navbar-brand fw-bold" href="<c:url value='/'/>">🌾 Đặc Sản</a>
@@ -21,6 +21,7 @@
             </c:if>
             <c:if test="${not empty sessionScope.user && sessionScope.user.role == 'VENDOR'}">
                 <li class="nav-item"><a class="nav-link" href="<c:url value='/vendor/dashboard'/>">🏬 Shop</a></li>
+                <li class="nav-item"><a class="nav-link" href="<c:url value='/vendor/blogs'/>">📝 Blog</a></li>
             </c:if>
         </ul>
 
@@ -28,8 +29,8 @@
         <ul class="navbar-nav">
             <c:choose>
                 <c:when test="${not empty sessionScope.user}">
-                    <!-- Order Status Dropdown - Only for CUSTOMER or ADMIN -->
-                    <c:if test="${sessionScope.user.role == 'CUSTOMER' || sessionScope.user.role == 'ADMIN'}">
+                    <!-- Order Status Dropdown - For CUSTOMER, ADMIN, and VENDOR -->
+                    <c:if test="${sessionScope.user.role == 'CUSTOMER' || sessionScope.user.role == 'ADMIN' || sessionScope.user.role == 'VENDOR'}">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-white" href="#" id="orderStatusDropdown" role="button"
                                data-bs-toggle="dropdown" aria-expanded="false">
@@ -52,11 +53,29 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a class="dropdown-item text-center" href="<c:url value='/user/orders'/>">
-                                        <i class="bi bi-receipt"></i> Xem tất cả đơn hàng
-                                    </a>
+                                    <c:choose>
+                                        <c:when test="${sessionScope.user.role == 'VENDOR'}">
+                                            <a class="dropdown-item text-center" href="<c:url value='/vendor/my-orders'/>">
+                                                <i class="bi bi-receipt"></i> Xem tất cả đơn hàng
+                                            </a>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <a class="dropdown-item text-center" href="<c:url value='/user/orders'/>">
+                                                <i class="bi bi-receipt"></i> Xem tất cả đơn hàng
+                                            </a>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </li>
                             </ul>
+                        </li>
+                    </c:if>
+                    
+                    <!-- Cart Link - For VENDOR -->
+                    <c:if test="${sessionScope.user.role == 'VENDOR'}">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="<c:url value='/vendor/cart'/>">
+                                🛒 Giỏ hàng
+                            </a>
                         </li>
                     </c:if>
                     
@@ -94,8 +113,13 @@
     </div>
 </nav>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Set user role for JavaScript functions
+    <c:if test="${not empty sessionScope.user}">
+        window.userRole = '<c:out value="${sessionScope.user.role}"/>';
+    </c:if>
+    
     // Đảm bảo dropdown menu hoạt động trên tất cả các trang
     document.addEventListener('DOMContentLoaded', function() {
         // Đóng dropdown khi click bên ngoài

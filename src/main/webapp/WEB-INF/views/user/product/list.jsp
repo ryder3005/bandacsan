@@ -303,7 +303,11 @@
                                 headers['X-CSRF-TOKEN'] = csrfToken;
                             }
 
-                            const response = await fetch('<c:url value="/user/cart/add"/>', {
+                            // Determine cart endpoint based on user role
+                            const userRole = '<c:out value="${sessionScope.user != null ? sessionScope.user.role : ''}"/>';
+                            const cartEndpoint = userRole === 'VENDOR' ? '<c:url value="/vendor/cart/add"/>' : '<c:url value="/user/cart/add"/>';
+                            
+                            const response = await fetch(cartEndpoint, {
                                 method: 'POST',
                                 headers: headers,
                                 body: JSON.stringify({

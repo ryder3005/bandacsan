@@ -11,6 +11,8 @@ public class CustomSiteMeshFilter extends ConfigurableSiteMeshFilter{
 		// Loại trừ các trang không cần decorator
 		builder.addExcludedPath("/login");
 		builder.addExcludedPath("/register");
+		builder.addExcludedPath("/forgot-password");
+		builder.addExcludedPath("/reset-password");
 		builder.addExcludedPath("/error");
 		builder.addExcludedPath("/api/*");
 		builder.addExcludedPath("/resources/*");

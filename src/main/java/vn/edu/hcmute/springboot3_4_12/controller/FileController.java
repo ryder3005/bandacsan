@@ -5,7 +5,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.hcmute.springboot3_4_12.service.IStorageService;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/files")
@@ -46,5 +51,25 @@ public class FileController {
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
+    }
+    @PostMapping("/upload-image")
+    @ResponseBody
+    public Map<String, Object> uploadBlogImage(@RequestParam("upload") MultipartFile file) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Sử dụng storageService bạn đã có để lưu ảnh
+            String filename = storageService.getSorageFilename(file, UUID.randomUUID().toString());
+            storageService.store(file, filename);
+
+            // URL để CKEditor hiển thị ảnh sau khi upload thành công
+            String url = "/files/" + filename;
+
+            response.put("uploaded", true);
+            response.put("url", url);
+        } catch (Exception e) {
+            response.put("uploaded", false);
+            response.put("error", Map.of("message", "Không thể tải ảnh lên: " + e.getMessage()));
+        }
+        return response;
     }
 }

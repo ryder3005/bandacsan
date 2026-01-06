@@ -1,6 +1,7 @@
 package vn.edu.hcmute.springboot3_4_12.service;
 
 import jakarta.validation.Valid;
+import org.springframework.transaction.annotation.Transactional;
 import vn.edu.hcmute.springboot3_4_12.dto.CategoryRequestDTO;
 import vn.edu.hcmute.springboot3_4_12.dto.CategoryResponseDTO;
 import vn.edu.hcmute.springboot3_4_12.entity.Category;
@@ -31,4 +32,7 @@ public interface ICategoryService {
     CategoryResponseDTO update(Long id, @Valid CategoryRequestDTO dto);
 
     CategoryResponseDTO create(@Valid CategoryRequestDTO dto);
+
+    @Transactional(readOnly = true)
+    CategoryResponseDTO getById(Long id);
 }

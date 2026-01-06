@@ -14,6 +14,7 @@ import vn.edu.hcmute.springboot3_4_12.repository.CartRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.CartItemRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.ProductRepository;
 import vn.edu.hcmute.springboot3_4_12.repository.UserRepository;
+import vn.edu.hcmute.springboot3_4_12.repository.VendorRepository;
 import vn.edu.hcmute.springboot3_4_12.service.ICartService;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class CartService implements ICartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final VendorRepository vendorRepository;
 
     @Override
     public CartDTO getCartByUserId(Long userId) {
@@ -42,6 +44,23 @@ public class CartService implements ICartService {
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Check if user is a vendor trying to add their own product
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if ("VENDOR".equals(user.getRole())) {
+            // Check if the product belongs to this vendor
+            if (product.getVendor() != null) {
+                Optional<vn.edu.hcmute.springboot3_4_12.entity.Vendor> vendorOpt = vendorRepository.findVendorByUser_Id(userId);
+                if (vendorOpt.isPresent()) {
+                    vn.edu.hcmute.springboot3_4_12.entity.Vendor vendor = vendorOpt.get();
+                    if (product.getVendor().getId().equals(vendor.getId())) {
+                        throw new RuntimeException("Bạn không thể thêm sản phẩm của chính mình vào giỏ hàng");
+                    }
+                }
+            }
+        }
 
         // Check if item already exists in cart
         Optional<CartItem> existingItem = cartItemRepository.findByCart_IdAndProduct_Id(cart.getId(), request.getProductId());
