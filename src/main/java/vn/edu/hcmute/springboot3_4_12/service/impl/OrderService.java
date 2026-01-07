@@ -45,7 +45,8 @@ public class OrderService implements IOrderService {
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(LocalDateTime.now());
-        order.setTotalAmount(cart.getTotalPrice());
+        // Thêm phí vận chuyển 25,000
+        order.setTotalAmount(cart.getTotalPrice() + 25000.0);
         order.setStatus(OrderStatus.PENDING);
         order = orderRepository.save(order);
 
@@ -138,7 +139,8 @@ public class OrderService implements IOrderService {
     public void updateStatus(long orderId, String status) {
         // 1. Tìm thông tin thanh toán dựa trên orderId
         Payment payment = paymentRepository.findByOrder_Id(orderId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin thanh toán cho đơn hàng: " + orderId));
+                .orElseThrow(
+                        () -> new RuntimeException("Không tìm thấy thông tin thanh toán cho đơn hàng: " + orderId));
 
         // 2. Cập nhật trạng thái thanh toán (ví dụ: "PAID", "FAILED")
         payment.setStatus(status);
@@ -192,8 +194,7 @@ public class OrderService implements IOrderService {
                 order.getStatus(),
                 order.getOrderDate(),
                 itemDTOs,
-                paymentDTO
-        );
+                paymentDTO);
     }
 
     private OrderItemDTO convertItemToDTO(OrderItem item) {
@@ -203,9 +204,9 @@ public class OrderService implements IOrderService {
         // 2. Tìm hình ảnh chính (main = true) từ danh sách images của Product
         String mainImage = item.getProduct().getImages().stream()
                 .filter(Image::isMain) // Lọc những ảnh có main = true
-                .map(Image::getUrl)    // Lấy ra chuỗi URL (tên file)
-                .findFirst()           // Lấy ảnh đầu tiên tìm thấy
-                .orElse(null);         // Nếu không có ảnh main nào thì trả về null
+                .map(Image::getUrl) // Lấy ra chuỗi URL (tên file)
+                .findFirst() // Lấy ảnh đầu tiên tìm thấy
+                .orElse(null); // Nếu không có ảnh main nào thì trả về null
 
         // 3. Trả về DTO hoàn chỉnh
         return new OrderItemDTO(
@@ -213,11 +214,10 @@ public class OrderService implements IOrderService {
                 item.getProduct().getId(),
                 item.getProduct().getNameVi(),
                 item.getProduct().getNameEn(),
-                mainImage,              // Gán ảnh chính vào productImage
+                mainImage, // Gán ảnh chính vào productImage
                 item.getQuantity(),
                 item.getPrice(),
-                subtotal
-        );
+                subtotal);
     }
 
     private PaymentDTO convertPaymentToDTO(Payment payment) {
@@ -226,8 +226,7 @@ public class OrderService implements IOrderService {
                 payment.getOrder().getId(),
                 payment.getMethod(),
                 payment.getStatus(),
-                payment.getTransactionId()
-        );
+                payment.getTransactionId());
     }
 
     @Override
@@ -317,11 +316,12 @@ public class OrderService implements IOrderService {
                 .filter(item -> item.getProduct() != null && item.getProduct().getVendor() != null)
                 .collect(Collectors.groupingBy(
                         item -> item.getProduct().getVendor(),
-                        Collectors.summingDouble(item -> item.getPrice() * item.getQuantity())
-                ));
+                        Collectors.summingDouble(item -> item.getPrice() * item.getQuantity())));
 
-        // Nếu order chỉ có items của 1 vendor, thì vendor đó nhận toàn bộ order totalAmount
-        // Nếu order có items của nhiều vendors, mỗi vendor nhận phần tương ứng với items của họ
+        // Nếu order chỉ có items của 1 vendor, thì vendor đó nhận toàn bộ order
+        // totalAmount
+        // Nếu order có items của nhiều vendors, mỗi vendor nhận phần tương ứng với
+        // items của họ
         if (vendorItemsAmounts.size() == 1) {
             // Chỉ có 1 vendor - nhận toàn bộ order totalAmount
             Vendor vendor = vendorItemsAmounts.keySet().iterator().next();
@@ -331,7 +331,7 @@ public class OrderService implements IOrderService {
             Double totalItemsAmount = vendorItemsAmounts.values().stream()
                     .mapToDouble(Double::doubleValue)
                     .sum();
-            
+
             if (totalItemsAmount > 0) {
                 for (Map.Entry<Vendor, Double> entry : vendorItemsAmounts.entrySet()) {
                     Vendor vendor = entry.getKey();
@@ -346,7 +346,7 @@ public class OrderService implements IOrderService {
 
     private void updateVendorRevenueAmount(Long vendorId, Double amount) {
         VendorRevenue revenue = vendorRevenueRepository.findByVendor_Id(vendorId);
-        
+
         if (revenue == null) {
             // Tạo mới
             revenue = new VendorRevenue();
