@@ -102,28 +102,36 @@
                                                             <!-- Product Image -->
                                                             <div
                                                                 style="height: 200px; overflow: hidden; background: #f8f9fa; position: relative;">
-                                                                <c:choose>
-                                                                    <c:when test="${not empty product.productImage}">
-                                                                        <img src="<c:url value='/files/${product.productImage}'/>"
-                                                                            class="card-img-top" alt="${product.nameVi}"
-                                                                            style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;">
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <div
-                                                                            class="d-flex align-items-center justify-content-center h-100">
-                                                                            <i class="bi bi-image"
-                                                                                style="font-size: 3rem; color: #ccc;"></i>
-                                                                        </div>
-                                                                    </c:otherwise>
-                                                                </c:choose>
+                                                                <a href="<c:url value='/user/products/${product.id}'/>"
+                                                                    style="text-decoration: none; color: inherit; display: block; height: 100%;">
+                                                                    <c:choose>
+                                                                        <c:when
+                                                                            test="${not empty product.productImage}">
+                                                                            <img src="<c:url value='/files/${product.productImage}'/>"
+                                                                                class="card-img-top"
+                                                                                alt="${product.nameVi}"
+                                                                                style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;">
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <div
+                                                                                class="d-flex align-items-center justify-content-center h-100">
+                                                                                <i class="bi bi-image"
+                                                                                    style="font-size: 3rem; color: #ccc;"></i>
+                                                                            </div>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </a>
                                                             </div>
 
                                                             <!-- Product Info -->
                                                             <div class="card-body d-flex flex-column">
                                                                 <h6 class="card-title fw-bold mb-2"
                                                                     style="min-height: 48px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                                                    ${product.nameVi != null ? product.nameVi :
-                                                                    product.nameEn}
+                                                                    <a href="<c:url value='/user/products/${product.id}'/>"
+                                                                        style="text-decoration: none; color: inherit;">
+                                                                        ${product.nameVi != null ? product.nameVi :
+                                                                        product.nameEn}
+                                                                    </a>
                                                                 </h6>
 
                                                                 <c:if test="${not empty product.categories}">
@@ -204,10 +212,12 @@
                             transform: scale(1) translate(0, 0);
                             opacity: 1;
                         }
+
                         50% {
                             transform: scale(0.5) translate(var(--fly-x), var(--fly-y));
                             opacity: 0.8;
                         }
+
                         100% {
                             transform: scale(0.3) translate(var(--fly-x), var(--fly-y));
                             opacity: 0;
@@ -215,19 +225,25 @@
                     }
 
                     @keyframes bounce {
-                        0%, 100% {
+
+                        0%,
+                        100% {
                             transform: scale(1);
                         }
+
                         50% {
                             transform: scale(1.2);
                         }
                     }
 
                     @keyframes pulse {
-                        0%, 100% {
+
+                        0%,
+                        100% {
                             transform: scale(1);
                             box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
                         }
+
                         50% {
                             transform: scale(1.05);
                             box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
@@ -274,7 +290,7 @@
                         const buttonRect = button.getBoundingClientRect();
                         const cartIcon = document.querySelector('.cart-icon, .bi-cart, [class*="cart"]');
                         let cartRect = { left: window.innerWidth - 100, top: 20 };
-                        
+
                         if (cartIcon) {
                             cartRect = cartIcon.getBoundingClientRect();
                         }
@@ -306,7 +322,7 @@
                             // Determine cart endpoint based on user role
                             const userRole = '<c:out value="${sessionScope.user != null ? sessionScope.user.role : ''}"/>';
                             const cartEndpoint = userRole === 'VENDOR' ? '<c:url value="/vendor/cart/add"/>' : '<c:url value="/user/cart/add"/>';
-                            
+
                             const response = await fetch(cartEndpoint, {
                                 method: 'POST',
                                 headers: headers,
@@ -326,7 +342,7 @@
                                 button.classList.remove('adding');
                                 button.classList.add('success');
                                 button.innerHTML = '<i class="bi bi-check-circle"></i> Đã thêm!';
-                                
+
                                 // Hiệu ứng bounce trên icon giỏ hàng
                                 if (cartIcon) {
                                     cartIcon.classList.add('cart-icon-animate');
